@@ -2,6 +2,8 @@
 
 > **AI-Powered Deep Diagnostic Engine for Production Systems**
 
+[English](README.md) | [中文](README_zh.md)
+
 [![Go Version](https://img.shields.io/badge/Go-1.21%2B-00ADD8?style=flat&logo=go)](https://go.dev/)
 [![License](https://img.shields.io/badge/License-MIT-green?style=flat)](LICENSE)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen?style=flat)](CONTRIBUTING.md)

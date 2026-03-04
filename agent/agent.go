@@ -103,6 +103,12 @@ func initNotifiers() {
 	if cfg := config.Config.Notify.WebAPI; cfg != nil && cfg.URL != "" {
 		notify.Register(notify.NewWebAPINotifier(cfg))
 	}
+	if cfg := config.Config.Notify.Feishu; cfg != nil && cfg.Webhook != "" {
+		notify.Register(notify.NewFeishuNotifier(cfg))
+	}
+	if cfg := config.Config.Notify.DingTalk; cfg != nil && cfg.Webhook != "" {
+		notify.Register(notify.NewDingTalkNotifier(cfg))
+	}
 }
 
 func (a *Agent) initDiagnoseEngine() {

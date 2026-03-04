@@ -49,6 +49,20 @@ type WebAPIConfig struct {
 	MaxRetries int               `toml:"max_retries"`
 }
 
+type FeishuConfig struct {
+	Webhook    string   `toml:"webhook"`
+	Secret     string   `toml:"secret"`
+	Timeout    Duration `toml:"timeout"`
+	MaxRetries int      `toml:"max_retries"`
+}
+
+type DingTalkConfig struct {
+	Webhook    string   `toml:"webhook"`
+	Secret     string   `toml:"secret"`
+	Timeout    Duration `toml:"timeout"`
+	MaxRetries int      `toml:"max_retries"`
+}
+
 type ConsoleConfig struct {
 	Enabled bool `toml:"enabled"`
 }
@@ -58,6 +72,8 @@ type NotifyConfig struct {
 	Flashduty *FlashdutyConfig `toml:"flashduty"`
 	PagerDuty *PagerDutyConfig `toml:"pagerduty"`
 	WebAPI    *WebAPIConfig    `toml:"webapi"`
+	Feishu    *FeishuConfig    `toml:"feishu"`
+	DingTalk  *DingTalkConfig  `toml:"dingtalk"`
 }
 
 // ModelConfig defines connection and model-specific parameters for one AI model.
@@ -347,6 +363,22 @@ func (c *NotifyConfig) applyDefaults() {
 			c.WebAPI.Headers[k] = os.Expand(v, func(key string) string {
 				return os.Getenv(key)
 			})
+		}
+	}
+	if c.Feishu != nil {
+		if c.Feishu.Timeout == 0 {
+			c.Feishu.Timeout = Duration(10 * time.Second)
+		}
+		if c.Feishu.MaxRetries <= 0 {
+			c.Feishu.MaxRetries = 1
+		}
+	}
+	if c.DingTalk != nil {
+		if c.DingTalk.Timeout == 0 {
+			c.DingTalk.Timeout = Duration(10 * time.Second)
+		}
+		if c.DingTalk.MaxRetries <= 0 {
+			c.DingTalk.MaxRetries = 1
 		}
 	}
 }

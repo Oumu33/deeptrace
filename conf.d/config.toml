@@ -2,7 +2,7 @@
 interval = "30s"
 
 [global.labels]
-from_agent = "catpaw"
+from_agent = "deeptrace"
 from_hostname = "${HOSTNAME}"
 from_hostip = "${IP}"
 
@@ -15,10 +15,6 @@ level = "info"
 ## 控制台输出（新用户快速验证告警效果，无需任何外部服务）
 [notify.console]
 enabled = true
-
-# [notify.flashduty]
-# integration_key = "your-flashduty-integration-key"
-# timeout = "10s"
 
 # [notify.pagerduty]
 # routing_key = "your-pagerduty-routing-key"
@@ -84,7 +80,7 @@ enabled = true
 # enable_thinking = true
 # thinking_budget = 10000
 #
-## ---- MCP 外部数据源（连接 Prometheus/Nightingale/Jaeger/CMDB 等）----
+## ---- MCP 外部数据源（连接 Prometheus/Jaeger/CMDB 等）----
 #
 # [ai.mcp]
 # enabled = true
@@ -94,19 +90,8 @@ enabled = true
 # name = "prometheus"
 # command = "/usr/local/bin/mcp-prometheus"
 # args = ["serve"]
-# 本机过滤条件, AI查询时用它筛选本机数据，使用 categraf 采集的数据机器标识为 ident
-# 如果使用 Node-Exporter 采集数据，identity 应该配置为 instance="${IP}:9100"
+# 本机过滤条件, AI查询时用它筛选本机数据
 # identity = 'ident="${HOSTNAME}"'
 # tools_allow = []                   # 白名单(空=全放行)
 # [ai.mcp.servers.env]
 # PROMETHEUS_URL = "http://127.0.0.1:9090"
-#
-# [[ai.mcp.servers]]
-# name = "nightingale"
-# command = "npx"
-# args = ["-y", "@n9e/n9e-mcp-server", "stdio"]
-# identity = 'ident="${HOSTNAME}"'   # 本 server 专用标识(覆盖 default)
-# tools_allow = [] # 白名单(空=全放行)
-# [ai.mcp.servers.env]
-# N9E_TOKEN = "480c04ed-ebe7-4266-xxxx-f8daf7819a6d"
-# N9E_BASE_URL = "http://127.0.0.1:17000"

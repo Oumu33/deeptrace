@@ -1,5 +1,5 @@
 ---
-name: catpaw-plugin-development
+name: deeptrace-plugin-development
 description: 为 Catpaw 项目开发、修改、补全或评审插件。用户只要提到 Catpaw 插件、监控检查、plugins 目录下的新插件、补充 agent 注册、生成 conf.d 示例、实现 Gather/Init/partials、对照现有插件仿写或重构插件时，都应使用这个 skill。
 ---
 

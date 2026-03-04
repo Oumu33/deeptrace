@@ -6,7 +6,7 @@
 
 **背景**：现有 `disk` 插件工作在挂载点维度（空间、inode、可写性），而磁盘 IO 性能工作在块设备维度。两者的过滤条件（`mount_points` vs `devices`）、数据来源（`disk.Usage()` vs `disk.IOCounters()` / `/proc/diskstats`）、状态管理（无状态 vs 需要前次采样做差值）完全独立，因此拆分为独立插件。
 
-**为什么只做 await**：IOPS、吞吐量、%util 的合理阈值完全取决于硬件规格，无法提供通用默认值。await（平均 IO 延迟）是唯一接近"通用"的指标——延迟高就是慢，无论什么硬件都意味着性能问题。行业顶级项目（node_exporter、Telegraf、Datadog）均采集 disk IO 指标，但无一提供开箱即用的通用告警阈值，catpaw 通过设备类型自适应填补这一空白。
+**为什么只做 await**：IOPS、吞吐量、%util 的合理阈值完全取决于硬件规格，无法提供通用默认值。await（平均 IO 延迟）是唯一接近"通用"的指标——延迟高就是慢，无论什么硬件都意味着性能问题。行业顶级项目（node_exporter、Telegraf、Datadog）均采集 disk IO 指标，但无一提供开箱即用的通用告警阈值，deeptrace 通过设备类型自适应填补这一空白。
 
 **参考**：Telegraf `inputs.diskio`、node_exporter `diskstats` collector、Datadog `io` check。三者均将 disk IO 与 disk space 分为独立模块。
 

@@ -439,9 +439,9 @@ repeat_number = 3
 
 1. 需要 root 权限（`CAP_NET_ADMIN`）
 2. 输出格式因驱动而异，难以通用解析
-3. catpaw 不是 metrics 采集系统，粗粒度的 errors/drops 足以触发告警
+3. deeptrace 不是 metrics 采集系统，粗粒度的 errors/drops 足以触发告警
 
-如果用户需要细粒度 NIC 计数器，应使用专门的 metrics exporter（如 Prometheus node_exporter）。catpaw 的定位是"发现问题并告警"，不是"展示详细 metrics"。
+如果用户需要细粒度 NIC 计数器，应使用专门的 metrics exporter（如 Prometheus node_exporter）。deeptrace 的定位是"发现问题并告警"，不是"展示详细 metrics"。
 
 ## 常见排查场景
 

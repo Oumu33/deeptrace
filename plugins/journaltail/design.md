@@ -36,7 +36,7 @@ journalctl --no-pager --no-tail --show-cursor \
 
 - **cursor 机制**：首次用 `--since <启动时间>`，后续用 `--after-cursor <上次游标>` 实现增量读取
 - **预过滤**：`--unit` 和 `--priority` 在 journalctl 层面过滤，减少需要传输和匹配的数据量
-- **后过滤**：`filter_include` / `filter_exclude` 在 catpaw 中逐行匹配（支持 glob + `/regex/`）
+- **后过滤**：`filter_include` / `filter_exclude` 在 deeptrace 中逐行匹配（支持 glob + `/regex/`）
 
 ### 为什么调命令而非直接读 journal 文件
 

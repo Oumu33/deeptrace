@@ -166,7 +166,7 @@ UDP: inuse 20 mem 5
 
 **无第三方依赖**——直接使用标准库 `syscall` 操作 Netlink socket（`syscall.Socket`、`syscall.Sendto`、`syscall.Recvfrom`、`syscall.ParseNetlinkMessage`）。
 
-Prometheus node_exporter 使用 `github.com/mdlayher/netlink` 库，但 catpaw 的需求很简单（dump + 计数，不需要属性过滤、Netlink 多播等高级功能），原始 syscall 足够且更符合"轻量无重依赖"的项目理念。整个 Netlink 实现约 130 行代码。
+Prometheus node_exporter 使用 `github.com/mdlayher/netlink` 库，但 deeptrace 的需求很简单（dump + 计数，不需要属性过滤、Netlink 多播等高级功能），原始 syscall 足够且更符合"轻量无重依赖"的项目理念。整个 Netlink 实现约 130 行代码。
 
 ## 结构体设计
 
@@ -418,7 +418,7 @@ TIME_WAIT 是 TCP 正常关闭流程的一部分（持续 2×MSL，Linux 默认 
 | macOS | 不支持 | Init 返回错误 |
 | Windows | 不支持 | Init 返回错误 |
 
-Netlink 是 Linux 特有的内核接口，其他平台无对等替代。对于 catpaw 的定位（Linux 生产环境监控），这不是问题。
+Netlink 是 Linux 特有的内核接口，其他平台无对等替代。对于 deeptrace 的定位（Linux 生产环境监控），这不是问题。
 
 ## 文件结构
 

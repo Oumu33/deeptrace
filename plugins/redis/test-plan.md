@@ -23,7 +23,7 @@ Covered checks:
 - Docker Compose stack under `plugins/redis/`
 - `redis-master` exposed on `127.0.0.1:6379`
 - `redis-replica` exposed on `127.0.0.1:6380`
-- password: `catpaw-test`
+- password: `deeptrace-test`
 
 ## Test Strategy
 

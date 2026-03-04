@@ -68,7 +68,7 @@ type Instance struct {
 Linux 需要 `CAP_NET_RAW`：
 
 ```bash
-sudo setcap cap_net_raw=+ep /path/to/catpaw
+sudo setcap cap_net_raw=+ep /path/to/deeptrace
 ```
 
 ## 跨平台兼容性

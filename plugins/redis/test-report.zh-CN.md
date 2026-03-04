@@ -17,7 +17,7 @@
 - 使用 `plugins/redis/docker-compose.yml` 启动测试环境
 - `redis-master`：`127.0.0.1:6379`
 - `redis-replica`：`127.0.0.1:6380`
-- Redis 密码：`catpaw-test`
+- Redis 密码：`deeptrace-test`
 
 从 Redis 实例本身取得的基线信息如下：
 
@@ -30,11 +30,11 @@
 本次验证分为两条路径：
 
 1. 通过 Catpaw CLI 和临时 Go helper，直接连接 Docker Compose 中的真实 Redis 环境进行集成验证。
-2. 通过 `GOCACHE=/tmp/catpaw-go-cache go test ./plugins/redis` 执行插件单元测试。
+2. 通过 `GOCACHE=/tmp/deeptrace-go-cache go test ./plugins/redis` 执行插件单元测试。
 
 同时使用两条路径的原因是：
 
-- `catpaw -test` 默认只输出告警事件和恢复事件，不会输出普通的健康事件。
+- `deeptrace -test` 默认只输出告警事件和恢复事件，不会输出普通的健康事件。
 - 对于健康路径验证，额外使用了临时 helper 直接调用 Redis 插件的 `Gather`，打印全部事件结果。
 
 ## 执行过的命令
@@ -43,39 +43,39 @@
 
 ```bash
 docker compose ps
-docker compose exec -T redis-master redis-cli -a catpaw-test INFO replication
-docker compose exec -T redis-replica redis-cli -a catpaw-test INFO replication
-docker compose exec -T redis-master redis-cli -a catpaw-test INFO persistence
-GOCACHE=/tmp/catpaw-go-cache go test ./plugins/redis
+docker compose exec -T redis-master redis-cli -a deeptrace-test INFO replication
+docker compose exec -T redis-replica redis-cli -a deeptrace-test INFO replication
+docker compose exec -T redis-master redis-cli -a deeptrace-test INFO persistence
+GOCACHE=/tmp/deeptrace-go-cache go test ./plugins/redis
 ```
 
 CLI 告警路径验证：
 
 ```bash
-timeout 5s /tmp/catpaw-redis-test -test -configs /tmp/catpaw-redis-master -plugins redis -loglevel error
-timeout 5s /tmp/catpaw-redis-test -test -configs /tmp/catpaw-redis-bad-auth -plugins redis -loglevel error
-timeout 5s /tmp/catpaw-redis-test -test -configs /tmp/catpaw-redis-response -plugins redis -loglevel error
-timeout 5s /tmp/catpaw-redis-test -test -configs /tmp/catpaw-redis-replica-mismatch -plugins redis -loglevel error
-timeout 5s /tmp/catpaw-redis-test -test -configs /tmp/catpaw-redis-counters -plugins redis -loglevel error
+timeout 5s /tmp/deeptrace-redis-test -test -configs /tmp/deeptrace-redis-master -plugins redis -loglevel error
+timeout 5s /tmp/deeptrace-redis-test -test -configs /tmp/deeptrace-redis-bad-auth -plugins redis -loglevel error
+timeout 5s /tmp/deeptrace-redis-test -test -configs /tmp/deeptrace-redis-response -plugins redis -loglevel error
+timeout 5s /tmp/deeptrace-redis-test -test -configs /tmp/deeptrace-redis-replica-mismatch -plugins redis -loglevel error
+timeout 5s /tmp/deeptrace-redis-test -test -configs /tmp/deeptrace-redis-counters -plugins redis -loglevel error
 ```
 
 运行时压力与计数器触发：
 
 ```bash
-docker compose exec -T redis-master redis-cli -a catpaw-test CONFIG SET maxclients 10
-docker compose exec -T redis-master redis-benchmark -a catpaw-test -n 500 -c 50 -t ping
-docker compose exec -T redis-master redis-cli -a catpaw-test CONFIG SET maxclients 10000
+docker compose exec -T redis-master redis-cli -a deeptrace-test CONFIG SET maxclients 10
+docker compose exec -T redis-master redis-benchmark -a deeptrace-test -n 500 -c 50 -t ping
+docker compose exec -T redis-master redis-cli -a deeptrace-test CONFIG SET maxclients 10000
 
 docker compose exec -T redis-master sh -lc '... SETEX ...'
-docker compose exec -T redis-master redis-benchmark -a catpaw-test -n 3000 -c 10 -d 131072 -r 1000000 -t set
+docker compose exec -T redis-master redis-benchmark -a deeptrace-test -n 3000 -c 10 -d 131072 -r 1000000 -t set
 ```
 
 健康路径 helper：
 
 ```bash
-GOCACHE=/tmp/catpaw-go-cache go run /tmp/redis_plugin_semantic_helper.go
-GOCACHE=/tmp/catpaw-go-cache go run /tmp/redis_plugin_expired_helper.go
-GOCACHE=/tmp/catpaw-go-cache go run /tmp/redis_plugin_evicted_helper.go
+GOCACHE=/tmp/deeptrace-go-cache go run /tmp/redis_plugin_semantic_helper.go
+GOCACHE=/tmp/deeptrace-go-cache go run /tmp/redis_plugin_expired_helper.go
+GOCACHE=/tmp/deeptrace-go-cache go run /tmp/redis_plugin_evicted_helper.go
 ```
 
 ## 测试结果

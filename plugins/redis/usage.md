@@ -45,7 +45,7 @@ repeat_number = 3
 Run in test mode:
 
 ```bash
-./catpaw -test -plugins redis
+./deeptrace -test -plugins redis
 ```
 
 ## Configuration Basics
@@ -102,7 +102,7 @@ Example for native TLS or a Redis proxy:
 targets = ["redis.example.com:6380"]
 password = "your-password"
 use_tls = true
-tls_ca = "/etc/catpaw/ca.pem"
+tls_ca = "/etc/deeptrace/ca.pem"
 tls_server_name = "redis.example.com"
 ```
 

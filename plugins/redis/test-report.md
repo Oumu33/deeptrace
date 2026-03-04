@@ -16,7 +16,7 @@
 - Docker Compose stack from `plugins/redis/docker-compose.yml`
 - `redis-master`: `127.0.0.1:6379`
 - `redis-replica`: `127.0.0.1:6380`
-- password: `catpaw-test`
+- password: `deeptrace-test`
 
 Baseline evidence from Redis itself:
 
@@ -29,11 +29,11 @@ Baseline evidence from Redis itself:
 Two validation paths were used:
 
 1. Real integration checks against the Docker Redis environment through Catpaw CLI and temporary Go helpers that call the Redis plugin `Gather` method directly.
-2. Plugin unit tests with `GOCACHE=/tmp/catpaw-go-cache go test ./plugins/redis`.
+2. Plugin unit tests with `GOCACHE=/tmp/deeptrace-go-cache go test ./plugins/redis`.
 
 Why both were needed:
 
-- `catpaw -test` prints alert and recovery events, but it does not print ordinary healthy events.
+- `deeptrace -test` prints alert and recovery events, but it does not print ordinary healthy events.
 - For healthy-path verification, a temporary helper invoked the plugin directly and printed all returned events.
 
 ## Commands Executed
@@ -42,39 +42,39 @@ Environment and unit tests:
 
 ```bash
 docker compose ps
-docker compose exec -T redis-master redis-cli -a catpaw-test INFO replication
-docker compose exec -T redis-replica redis-cli -a catpaw-test INFO replication
-docker compose exec -T redis-master redis-cli -a catpaw-test INFO persistence
-GOCACHE=/tmp/catpaw-go-cache go test ./plugins/redis
+docker compose exec -T redis-master redis-cli -a deeptrace-test INFO replication
+docker compose exec -T redis-replica redis-cli -a deeptrace-test INFO replication
+docker compose exec -T redis-master redis-cli -a deeptrace-test INFO persistence
+GOCACHE=/tmp/deeptrace-go-cache go test ./plugins/redis
 ```
 
 CLI alert-path verification:
 
 ```bash
-timeout 5s /tmp/catpaw-redis-test -test -configs /tmp/catpaw-redis-master -plugins redis -loglevel error
-timeout 5s /tmp/catpaw-redis-test -test -configs /tmp/catpaw-redis-bad-auth -plugins redis -loglevel error
-timeout 5s /tmp/catpaw-redis-test -test -configs /tmp/catpaw-redis-response -plugins redis -loglevel error
-timeout 5s /tmp/catpaw-redis-test -test -configs /tmp/catpaw-redis-replica-mismatch -plugins redis -loglevel error
-timeout 5s /tmp/catpaw-redis-test -test -configs /tmp/catpaw-redis-counters -plugins redis -loglevel error
+timeout 5s /tmp/deeptrace-redis-test -test -configs /tmp/deeptrace-redis-master -plugins redis -loglevel error
+timeout 5s /tmp/deeptrace-redis-test -test -configs /tmp/deeptrace-redis-bad-auth -plugins redis -loglevel error
+timeout 5s /tmp/deeptrace-redis-test -test -configs /tmp/deeptrace-redis-response -plugins redis -loglevel error
+timeout 5s /tmp/deeptrace-redis-test -test -configs /tmp/deeptrace-redis-replica-mismatch -plugins redis -loglevel error
+timeout 5s /tmp/deeptrace-redis-test -test -configs /tmp/deeptrace-redis-counters -plugins redis -loglevel error
 ```
 
 Runtime stimulation:
 
 ```bash
-docker compose exec -T redis-master redis-cli -a catpaw-test CONFIG SET maxclients 10
-docker compose exec -T redis-master redis-benchmark -a catpaw-test -n 500 -c 50 -t ping
-docker compose exec -T redis-master redis-cli -a catpaw-test CONFIG SET maxclients 10000
+docker compose exec -T redis-master redis-cli -a deeptrace-test CONFIG SET maxclients 10
+docker compose exec -T redis-master redis-benchmark -a deeptrace-test -n 500 -c 50 -t ping
+docker compose exec -T redis-master redis-cli -a deeptrace-test CONFIG SET maxclients 10000
 
 docker compose exec -T redis-master sh -lc '... SETEX ...'
-docker compose exec -T redis-master redis-benchmark -a catpaw-test -n 3000 -c 10 -d 131072 -r 1000000 -t set
+docker compose exec -T redis-master redis-benchmark -a deeptrace-test -n 3000 -c 10 -d 131072 -r 1000000 -t set
 ```
 
 Healthy-path helpers:
 
 ```bash
-GOCACHE=/tmp/catpaw-go-cache go run /tmp/redis_plugin_semantic_helper.go
-GOCACHE=/tmp/catpaw-go-cache go run /tmp/redis_plugin_expired_helper.go
-GOCACHE=/tmp/catpaw-go-cache go run /tmp/redis_plugin_evicted_helper.go
+GOCACHE=/tmp/deeptrace-go-cache go run /tmp/redis_plugin_semantic_helper.go
+GOCACHE=/tmp/deeptrace-go-cache go run /tmp/redis_plugin_expired_helper.go
+GOCACHE=/tmp/deeptrace-go-cache go run /tmp/redis_plugin_evicted_helper.go
 ```
 
 ## Results

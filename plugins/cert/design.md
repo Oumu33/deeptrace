@@ -105,7 +105,7 @@ SMTP 要求先完成文本协议协商，再升级 TLS：
 客户端                     服务器
    -------- TCP connect -------->
    <------- 220 banner ---------
-   -------- EHLO catpaw ------->
+   -------- EHLO deeptrace ------->
    <------- 250 OK -------------
    -------- STARTTLS ---------->
    <------- 220 Ready ----------
@@ -568,7 +568,7 @@ evaluateExpiry(event, cert, certIdx, chainLen, check):
 
 很多用户同时使用 Prometheus，可能会问"为什么不直接用 blackbox_exporter"。
 
-| 特性 | catpaw cert | blackbox_exporter |
+| 特性 | deeptrace cert | blackbox_exporter |
 | --- | --- | --- |
 | 输出类型 | **分级事件**（直接告警） | 指标（需额外配 PromQL 规则） |
 | 文件模式 | 支持（含 glob） | 不支持 |
@@ -578,7 +578,7 @@ evaluateExpiry(event, cert, certIdx, chainLen, check):
 | 依赖栈 | 独立运行 | 依赖 Prometheus + Alertmanager |
 | 适用场景 | 不想维护 Prometheus 栈、或需要即时告警 | 已有 Prometheus 生态的环境 |
 
-两者不冲突——如果已有 Prometheus 且证书指标已采集，catpaw cert 的价值在于提供更精确的事件语义（intermediate vs leaf、not-yet-valid 检测）和对本地文件的覆盖。
+两者不冲突——如果已有 Prometheus 且证书指标已采集，deeptrace cert 的价值在于提供更精确的事件语义（intermediate vs leaf、not-yet-valid 检测）和对本地文件的覆盖。
 
 ## 跨平台兼容性
 

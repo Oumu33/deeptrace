@@ -10,7 +10,7 @@
 2. **系统命令输出监控**：如 `dmesg`、`last`、`ss` 等系统命令的输出中检测异常
 3. **弥补 journaltail 和 logfile 的空白**：不在 journal 中也不在文件中的数据，通过脚本获取后过滤
 
-**与 exec 插件的关系**：exec 插件要求脚本自己输出结构化事件（JSON 或 Nagios 格式），scriptfilter 只需要脚本输出纯文本，由 catpaw 负责过滤和告警。scriptfilter 更适合"已有脚本但不想改输出格式"的场景。
+**与 exec 插件的关系**：exec 插件要求脚本自己输出结构化事件（JSON 或 Nagios 格式），scriptfilter 只需要脚本输出纯文本，由 deeptrace 负责过滤和告警。scriptfilter 更适合"已有脚本但不想改输出格式"的场景。
 
 **参考**：Nagios `check_log` + `check_procs`（管道组合）。
 

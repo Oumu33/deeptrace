@@ -107,7 +107,7 @@ if ins.apiVersion == "" {
 }
 ```
 
-**为什么不在 Init 时协商**：与 socket 不验证存在性的逻辑一致——Docker 可能在 catpaw 启动后才启动。延迟到首次 Gather 时协商，确保 Docker 已就绪。
+**为什么不在 Init 时协商**：与 socket 不验证存在性的逻辑一致——Docker 可能在 deeptrace 启动后才启动。延迟到首次 Gather 时协商，确保 Docker 已就绪。
 
 **为什么不硬编码 v1.43**：硬编码意味着 Docker 23.0 以下（API < v1.43）的用户必须手动配置 `api_version`，否则 daemon 直接拒绝请求。自动协商让老版本 Docker 零配置可用。
 

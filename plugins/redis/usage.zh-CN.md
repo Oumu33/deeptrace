@@ -45,7 +45,7 @@ repeat_number = 3
 测试运行：
 
 ```bash
-./catpaw -test -plugins redis
+./deeptrace -test -plugins redis
 ```
 
 ## 基础配置
@@ -102,7 +102,7 @@ db = 2
 targets = ["redis.example.com:6380"]
 password = "your-password"
 use_tls = true
-tls_ca = "/etc/catpaw/ca.pem"
+tls_ca = "/etc/deeptrace/ca.pem"
 tls_server_name = "redis.example.com"
 ```
 

@@ -358,7 +358,7 @@ countOpenFds(pid) (int, error):
 
 ### 容器环境
 
-在容器内读取 `/proc/{pid}/limits` 和 `/proc/{pid}/fd` 获取的是**容器内进程**的值（PID namespace 隔离后看到容器内 PID）。若 catpaw 和目标进程在同一容器内运行，监控的是该容器内的进程。若 catpaw 运行在宿主机上，看到的是宿主机上所有进程。
+在容器内读取 `/proc/{pid}/limits` 和 `/proc/{pid}/fd` 获取的是**容器内进程**的值（PID namespace 隔离后看到容器内 PID）。若 deeptrace 和目标进程在同一容器内运行，监控的是该容器内的进程。若 deeptrace 运行在宿主机上，看到的是宿主机上所有进程。
 
 ## 文件结构
 

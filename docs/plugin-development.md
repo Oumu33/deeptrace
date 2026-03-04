@@ -1,6 +1,6 @@
 # 插件开发指南
 
-catpaw 采用插件化架构，新增插件只需实现几个接口并注册即可。
+deeptrace 采用插件化架构，新增插件只需实现几个接口并注册即可。
 
 ## 目录结构
 
@@ -18,10 +18,10 @@ plugins/
 package myplugin
 
 import (
-    "github.com/cprobe/catpaw/config"
-    "github.com/cprobe/catpaw/pkg/safe"
-    "github.com/cprobe/catpaw/plugins"
-    "github.com/cprobe/catpaw/types"
+    "github.com/cprobe/deeptrace/config"
+    "github.com/cprobe/deeptrace/pkg/safe"
+    "github.com/cprobe/deeptrace/plugins"
+    "github.com/cprobe/deeptrace/types"
 )
 
 const pluginName = "myplugin"
@@ -97,7 +97,7 @@ func (ins *Instance) Gather(q *safe.Queue[*types.Event]) {
 在 `agent/agent.go` 的 import 块中添加：
 
 ```go
-_ "github.com/cprobe/catpaw/plugins/myplugin"
+_ "github.com/cprobe/deeptrace/plugins/myplugin"
 ```
 
 ### 4. 创建配置文件

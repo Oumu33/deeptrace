@@ -1,7 +1,7 @@
 # 命令行参数
 
 ```
-./catpaw [options]
+./deeptrace [options]
 ```
 
 | 参数 | 类型 | 默认值 | 说明 |
@@ -21,26 +21,26 @@
 不发送到 FlashDuty，直接在终端查看事件输出：
 
 ```bash
-./catpaw -test
+./deeptrace -test
 ```
 
 ### 只运行指定插件
 
 ```bash
-./catpaw -test -plugins disk:procnum
+./deeptrace -test -plugins disk:procnum
 ```
 
 ### 指定配置目录
 
 ```bash
-./catpaw -configs /etc/catpaw/conf.d
+./deeptrace -configs /etc/deeptrace/conf.d
 ```
 
 ### Windows 服务管理
 
 ```bash
-catpaw.exe -win-service-install
-catpaw.exe -win-service-start
-catpaw.exe -win-service-stop
-catpaw.exe -win-service-uninstall
+deeptrace.exe -win-service-install
+deeptrace.exe -win-service-start
+deeptrace.exe -win-service-stop
+deeptrace.exe -win-service-uninstall
 ```

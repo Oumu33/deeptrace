@@ -2,11 +2,11 @@
 
 ## 概述
 
-检测机器 hostname 和 IP 地址在 catpaw 进程生命周期内是否发生变化。变化时产出告警，提醒用户重启 catpaw 以刷新全局 labels 中的 `${HOSTNAME}` / `${IP}` 值。
+检测机器 hostname 和 IP 地址在 deeptrace 进程生命周期内是否发生变化。变化时产出告警，提醒用户重启 deeptrace 以刷新全局 labels 中的 `${HOSTNAME}` / `${IP}` 值。
 
-**背景**：catpaw 在启动时将 `${HOSTNAME}` 和 `${IP}` 解析为实际值并写入全局 labels，全程不再更新。如果运行期间 hostname 或 IP 发生变化，告警事件中的 `from_hostname` / `from_hostip` 会与实际不符，用户无法正确关联告警来源。此外，labels 变化会导致 AlertKey（MD5）改变，引发虚假恢复和虚假新告警。
+**背景**：deeptrace 在启动时将 `${HOSTNAME}` 和 `${IP}` 解析为实际值并写入全局 labels，全程不再更新。如果运行期间 hostname 或 IP 发生变化，告警事件中的 `from_hostname` / `from_hostip` 会与实际不符，用户无法正确关联告警来源。此外，labels 变化会导致 AlertKey（MD5）改变，引发虚假恢复和虚假新告警。
 
-**定位**：用 catpaw 自身的监控能力解决自身的元问题——检测影响告警正确性的系统身份变更，让用户主动决定是否重启。
+**定位**：用 deeptrace 自身的监控能力解决自身的元问题——检测影响告警正确性的系统身份变更，让用户主动决定是否重启。
 
 **参考**：Prometheus node_exporter、Telegraf 均在启动时确定 hostname，进程生命周期内不变。hostident 补充了"变化感知"这一缺失环节。
 
@@ -37,17 +37,17 @@ hostident 使用 `config.DetectIP()` 而非自行实现 IP 检测。这保证了
 
 ## 基准值机制
 
-插件在 `Init()` 时记录 hostname 和 IP 的基准值，`Gather()` 每轮获取当前值与基准值对比，不一致则按配置的 severity 告警，一致则产出 OK 事件。基准值在进程生命周期内不变，重启 catpaw 后基准值自然刷新为新值。
+插件在 `Init()` 时记录 hostname 和 IP 的基准值，`Gather()` 每轮获取当前值与基准值对比，不一致则按配置的 severity 告警，一致则产出 OK 事件。基准值在进程生命周期内不变，重启 deeptrace 后基准值自然刷新为新值。
 
 ## 告警生命周期
 
 ```
-t=0:    catpaw 启动，Init() 记录 baseHostname="host-A", baseIP="10.0.0.1"
+t=0:    deeptrace 启动，Init() 记录 baseHostname="host-A", baseIP="10.0.0.1"
 t=5m:   Gather: hostname="host-A", IP="10.0.0.1" → 两个 OK 事件
 t=10m:  运维修改 hostname 为 "host-B"
 t=15m:  Gather: hostname="host-B" != "host-A" → Warning（或用户配置的级别）
                 IP="10.0.0.1" → OK
-t=20m:  用户重启 catpaw
+t=20m:  用户重启 deeptrace
 t=20m:  Init() 记录 baseHostname="host-B", baseIP="10.0.0.1"
 t=25m:  Gather: hostname="host-B" → OK（新基准）
 ```
@@ -56,7 +56,7 @@ t=25m:  Gather: hostname="host-B" → OK（新基准）
 
 ### 关于重启后恢复通知
 
-重启后旧进程的告警状态丢失，新进程不会为旧告警发送恢复通知。这是 catpaw 告警引擎的通用特性（所有插件都受此影响），不在 hostident 插件层解决。下游平台（FlashDuty、PagerDuty）的超时自动关闭机制可覆盖此场景。
+重启后旧进程的告警状态丢失，新进程不会为旧告警发送恢复通知。这是 deeptrace 告警引擎的通用特性（所有插件都受此影响），不在 hostident 插件层解决。下游平台（FlashDuty、PagerDuty）的超时自动关闭机制可覆盖此场景。
 
 ## 结构体设计
 
@@ -114,8 +114,8 @@ OK 事件也携带 attrs，便于巡检确认当前身份信息。
 
 ## Description 示例
 
-- hostname 变化：`hostname changed from "host-A" to "host-B" since catpaw started, consider restarting catpaw`
-- IP 变化：`IP changed from 10.0.0.1 to 10.0.0.2 since catpaw started, consider restarting catpaw`
+- hostname 变化：`hostname changed from "host-A" to "host-B" since deeptrace started, consider restarting deeptrace`
+- IP 变化：`IP changed from 10.0.0.1 to 10.0.0.2 since deeptrace started, consider restarting deeptrace`
 - 一切正常（Ok）：`hostname "host-A" unchanged` / `IP 10.0.0.1 unchanged`
 - hostname 获取失败：`failed to get hostname: <error>`
 - IP 获取失败：`failed to detect current IP address`
@@ -131,7 +131,7 @@ OK 事件也携带 attrs，便于巡检确认当前身份信息。
 | interval | `"5m"` | 低频事件，5 分钟检测一次足够 |
 | for_duration | `0` | 身份变化是确定性事件，无需持续确认 |
 | repeat_interval | `"1h"` | 持续提醒用户重启 |
-| repeat_number | `0` | 不限制，直到用户重启 catpaw |
+| repeat_number | `0` | 不限制，直到用户重启 deeptrace |
 
 ## 与其他插件的关系
 

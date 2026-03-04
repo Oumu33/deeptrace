@@ -83,13 +83,13 @@ fingerprint 比对开销极小（一次 256 字节 pread + hex 编码），对 I
 
 ### 偏移量持久化
 
-**问题**：catpaw 重启后，内存中的 fileState 丢失，所有文件从 `initial_position` 重新开始。如果 `initial_position = "end"`，重启期间的新增日志会被跳过；如果 `initial_position = "beginning"`，会重复处理历史日志。
+**问题**：deeptrace 重启后，内存中的 fileState 丢失，所有文件从 `initial_position` 重新开始。如果 `initial_position = "end"`，重启期间的新增日志会被跳过；如果 `initial_position = "beginning"`，会重复处理历史日志。
 
 **方案**：将 fileState 持久化到 JSON 文件（类似 Filebeat 的 registry）。
 
 配置项 `state_file`：
 - 默认值：`<StateDir>/p.logfile/.logfile_state_<hash>.json`（hash 基于 targets 列表，确保多实例互不冲突）
-- `StateDir` 是 catpaw 全局的运行时状态目录，默认为 `conf.d` 同级的 `state.d/`（如 `conf.d` → `state.d`，`/etc/catpaw/conf.d` → `/etc/catpaw/state.d`）
+- `StateDir` 是 deeptrace 全局的运行时状态目录，默认为 `conf.d` 同级的 `state.d/`（如 `conf.d` → `state.d`，`/etc/deeptrace/conf.d` → `/etc/deeptrace/state.d`）
 - State 文件与配置文件分离，配置目录可保持只读（适配容器化/配置管理部署）
 - 用户可自定义路径
 
@@ -113,7 +113,7 @@ fingerprint 比对开销极小（一次 256 字节 pread + hex 编码），对 I
 | 每次 Gather 结束 | 如果 state 有变化，原子写入（write temp → rename） |
 | Drop() | 最后一次保存 state |
 
-原子写入确保即使 catpaw 在写入过程中崩溃，state file 也不会损坏。
+原子写入确保即使 deeptrace 在写入过程中崩溃，state file 也不会损坏。
 
 ### 首次运行行为
 
@@ -477,7 +477,7 @@ Gather(q):
 
 ### 关键行为
 
-1. **精确路径 + 文件不存在 + 从未见过** → 静默跳过（Debug 日志）。避免 catpaw 启动时应用尚未启动导致的误报。
+1. **精确路径 + 文件不存在 + 从未见过** → 静默跳过（Debug 日志）。避免 deeptrace 启动时应用尚未启动导致的误报。
 2. **精确路径 + 文件不存在 + 之前见过** → 持续产出 Critical 事件（每次 Gather），保留 fileState。当文件重新出现时，rotation 检测自动重置 offset=0 从头读取，并产出 Ok/Warning 事件以解除告警。
 3. **glob 路径 + 文件消失** → 静默清理 fileState。glob 匹配的文件自然轮转（压缩/删除）是正常行为。
 4. **每个 target 独立产出事件**，互不影响（原则 13：局部失败不影响全局）。
@@ -625,7 +625,7 @@ filter_include = ["*ERROR*", "*FATAL*", "/(?i)exception|panic/"]
 
 ## 偏移量持久化文件路径（默认自动生成于 state.d/p.logfile/ 下）
 ## state 文件与配置文件分离存放，配置目录可保持只读
-## 持久化后 catpaw 重启不会丢失读取进度
+## 持久化后 deeptrace 重启不会丢失读取进度
 # state_file = ""
 
 ## 文件操作超时（默认 10s，主要防范 NFS 挂载的日志文件）

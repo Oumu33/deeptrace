@@ -4,7 +4,7 @@
 
 ### 1. 下载
 
-从 [GitHub Releases](https://github.com/cprobe/catpaw/releases) 下载对应平台的压缩包并解压。
+从 [GitHub Releases](https://github.com/cprobe/deeptrace/releases) 下载对应平台的压缩包并解压。
 
 ### 2. 配置
 
@@ -20,24 +20,24 @@ url = "https://api.flashcat.cloud/event/push/alert/standard?integration_key=YOUR
 ### 3. 测试运行
 
 ```bash
-./catpaw -test
+./deeptrace -test
 ```
 
 确认输出无误后，正式启动。
 
 ### 4. systemd 服务（推荐）
 
-创建 `/etc/systemd/system/catpaw.service`：
+创建 `/etc/systemd/system/deeptrace.service`：
 
 ```ini
 [Unit]
-Description=catpaw event monitor
+Description=deeptrace event monitor
 After=network.target
 
 [Service]
 Type=simple
-ExecStart=/opt/catpaw/catpaw -configs /opt/catpaw/conf.d
-WorkingDirectory=/opt/catpaw
+ExecStart=/opt/deeptrace/deeptrace -configs /opt/deeptrace/conf.d
+WorkingDirectory=/opt/deeptrace
 Restart=always
 RestartSec=5
 LimitNOFILE=65536
@@ -50,31 +50,31 @@ WantedBy=multi-user.target
 
 ```bash
 sudo systemctl daemon-reload
-sudo systemctl enable catpaw
-sudo systemctl start catpaw
+sudo systemctl enable deeptrace
+sudo systemctl start deeptrace
 ```
 
 查看日志：
 
 ```bash
-sudo journalctl -u catpaw -f
+sudo journalctl -u deeptrace -f
 ```
 
 ### 5. 热加载
 
-catpaw 支持通过 `SIGHUP` 信号热加载插件配置（新增/修改/删除插件目录），无需重启：
+deeptrace 支持通过 `SIGHUP` 信号热加载插件配置（新增/修改/删除插件目录），无需重启：
 
 ```bash
-kill -HUP $(pidof catpaw)
+kill -HUP $(pidof deeptrace)
 ```
 
 ## Docker 部署
 
 ```bash
 docker run -d \
-  --name catpaw \
+  --name deeptrace \
   -v /path/to/your/conf.d:/app/conf.d \
-  flashcatcloud/catpaw:latest
+  flashcatcloud/deeptrace:latest
 ```
 
 镜像内置了默认 `conf.d`，挂载自定义配置目录即可覆盖。
@@ -82,8 +82,8 @@ docker run -d \
 ## 目录结构
 
 ```
-/opt/catpaw/
-├── catpaw                  # 二进制文件
+/opt/deeptrace/
+├── deeptrace                  # 二进制文件
 └── conf.d/
     ├── config.toml         # 全局配置
     ├── p.disk/

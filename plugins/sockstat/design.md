@@ -14,7 +14,7 @@ listen 队列（accept backlog）满时，内核静默丢弃新到达的 SYN 包
 | conntrack | L3/L4 连接跟踪 | Netfilter 跟踪表满，新连接被丢弃 |
 | **sockstat** | L4 应用层 accept | listen backlog 满，应用 accept() 太慢 |
 
-**参考**：Prometheus `node_exporter` 采集 `node_netstat_TcpExt_ListenOverflows` 和 `node_netstat_TcpExt_ListenDrops` 指标（累计计数器），用户需自己在 PromQL 里做 `rate()` 和告警规则。catpaw 内置增量检测和阈值判断，开箱即用。
+**参考**：Prometheus `node_exporter` 采集 `node_netstat_TcpExt_ListenOverflows` 和 `node_netstat_TcpExt_ListenDrops` 指标（累计计数器），用户需自己在 PromQL 里做 `rate()` 和告警规则。deeptrace 内置增量检测和阈值判断，开箱即用。
 
 ## 与前三个插件的关键差异
 
@@ -24,9 +24,9 @@ listen 队列（accept backlog）满时，内核静默丢弃新到达的 SYN 包
 | 阈值含义 | 使用率百分比 | 两次采集间的新增溢出次数 |
 | 状态管理 | 无状态 | 需存储上次计数器值 |
 | 首次 Gather | 直接计算并产出事件 | 建立基线，产出 Ok（delta=0） |
-| 计数器重置 | 不适用 | 系统重启时自然重置（catpaw 同步重启） |
+| 计数器重置 | 不适用 | 系统重启时自然重置（deeptrace 同步重启） |
 
-这是 catpaw 第一个**增量检测**模式的系统级插件。docker 插件的 `restart_detected` 维度采用类似模式（跟踪 RestartCount 增量），但作用于容器粒度。
+这是 deeptrace 第一个**增量检测**模式的系统级插件。docker 插件的 `restart_detected` 维度采用类似模式（跟踪 RestartCount 增量），但作用于容器粒度。
 
 ## 检查维度
 
@@ -212,7 +212,7 @@ Gather(q):
     // 计算增量
     delta = overflows - ins.prevOverflows
     if overflows < ins.prevOverflows:
-        // 计数器回绕或系统重启后 catpaw 未重启（极罕见），重置基线
+        // 计数器回绕或系统重启后 deeptrace 未重启（极罕见），重置基线
         delta = 0
 
     dropsDelta = drops - ins.prevDrops
@@ -293,7 +293,7 @@ readListenStats() (overflows uint64, drops uint64, err error):
 
 1. **按 header 名查找列索引**，不硬编码列位置——内核版本间字段顺序可能不同
 2. **首次 Gather 建立基线**，产出 Ok 事件（delta=0），不产生误报
-3. **计数器回绕保护**：若当前值 < 上次值（极罕见，如系统重启后 catpaw 未重启），delta 设为 0 并重置基线
+3. **计数器回绕保护**：若当前值 < 上次值（极罕见，如系统重启后 deeptrace 未重启），delta 设为 0 并重置基线
 4. **ListenDrops 仅作为 attrs 参考**，不参与阈值判断（它是 ListenOverflows 的超集，缺乏精确性）
 5. **`ListenOverflows` 不存在时产出 Critical 事件**——极老内核可能没有此字段
 6. **`ListenDrops` 不存在时静默忽略**（仅影响 attrs，不影响核心逻辑）
@@ -358,9 +358,9 @@ readListenStats() (overflows uint64, drops uint64, err error):
 - 如果容器使用 `hostNetwork: true`，读到的是宿主机的值
 - 如果容器使用独立 network namespace（默认），读到的是该 namespace 的值
 
-这意味着 catpaw 以 DaemonSet 部署时：
+这意味着 deeptrace 以 DaemonSet 部署时：
 - **hostNetwork: true**（推荐）：监控整个节点的 listen overflow
-- **hostNetwork: false**：仅监控 catpaw 自身 namespace 的 listen overflow（通常无意义）
+- **hostNetwork: false**：仅监控 deeptrace 自身 namespace 的 listen overflow（通常无意义）
 
 ## 文件结构
 

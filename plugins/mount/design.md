@@ -349,7 +349,7 @@ severity = "Critical"
 
 ### 与 Sensu check-mounts 的对比
 
-Sensu `check-mounts` 的核心功能就是"检查 fstab 中的条目是否都已挂载"。catpaw 的 fstab 模式提供了等价能力，同时可以与手动条目组合使用，支持更精细的 options 检查。
+Sensu `check-mounts` 的核心功能就是"检查 fstab 中的条目是否都已挂载"。deeptrace 的 fstab 模式提供了等价能力，同时可以与手动条目组合使用，支持更精细的 options 检查。
 
 ## CIS Benchmark 常见检查项
 

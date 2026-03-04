@@ -1,252 +1,279 @@
-English | [中文](README_zh.md)
+# DeepTrace
 
-# 🐾 catpaw
+> **AI-Powered Deep Diagnostic Engine for Production Systems**
 
-catpaw is a lightweight monitoring agent with **AI-powered diagnostics**.
-It detects anomalies through plugin-based checks, produces standardized events, and — when an alert fires — can automatically trigger AI root-cause analysis using 70+ built-in diagnostic tools.
+[![Go Version](https://img.shields.io/badge/Go-1.21%2B-00ADD8?style=flat&logo=go)](https://go.dev/)
+[![License](https://img.shields.io/badge/License-MIT-green?style=flat)](LICENSE)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen?style=flat)](CONTRIBUTING.md)
 
-Events can be forwarded to any alert platform (Flashduty, PagerDuty, or any HTTP endpoint), or simply printed to the console for quick validation.
+---
 
-## ✨ Key Features
+## What is DeepTrace?
 
-- 🪶 **Lightweight, zero heavy dependencies** — single binary, easy to deploy
-- 🔌 **Plugin-based monitoring** — 25+ check plugins, enable only what you need
-- 🤖 **AI-powered diagnosis** — automatic root-cause analysis triggered by alerts
-- 💬 **Interactive AI chat** — troubleshoot issues conversationally with AI + tools
-- 🩺 **Proactive health inspection** — on-demand AI-driven health checks
-- 🛠️ **70+ diagnostic tools** — system, network, storage, security, process, kernel
-- 🔗 **MCP integration** — connect external data sources (Prometheus, Jaeger, CMDB, etc.) via [Model Context Protocol](https://modelcontextprotocol.io/)
-- 📡 **Flexible notification** — console, generic WebAPI, Flashduty, PagerDuty, or any combination
-- 🔄 **Self-monitoring friendly** — ideal for monitoring your monitoring systems
+DeepTrace is an intelligent diagnostic engine that goes beyond traditional monitoring alerts. When something breaks, it doesn't just tell you **what** happened — it tells you **why** and **where** in your code.
 
-## 🏗️ Architecture Overview
-
-```text
-┌─────────────────────────────────────────────────────────────────┐
-│                        catpaw agent                             │
-│                                                                 │
-│  ┌─────────────┐   alert    ┌──────────────┐    AI + Tools     │
-│  │  25+ Check  │ ────────── │  AI Diagnose │ ──────────────┐   │
-│  │   Plugins   │  trigger   │    Engine    │               │   │
-│  └──────┬──────┘            └──────────────┘               │   │
-│         │                                                  ▼   │
-│         │ events    ┌──────────────┐         ┌───────────────┐ │
-│         └────────── │   Notifiers  │         │  70+ Diagnose │ │
-│                     │  (multiple)  │         │     Tools     │ │
-│                     └──────────────┘         └───────┬───────┘ │
-│                                                      │         │
-│  ┌─────────────┐                            ┌────────┴───────┐ │
-│  │  AI Chat    │ ───── interactive ──────── │  MCP External  │ │
-│  │  (CLI)      │       troubleshoot         │  Data Sources  │ │
-│  └─────────────┘                            └────────────────┘ │
-└─────────────────────────────────────────────────────────────────┘
+```
+Traditional Alert:  "CPU usage is 92%"
+DeepTrace Report:   "CPU 92% → myapp process (PID 12345) → json.Marshal at handler.go:45
+                     → Processing 10MB JSON response → API missing pagination"
 ```
 
-## 🔍 Check Plugins
+## 🚀 Features
 
-| Plugin | Description |
-| --- | --- |
-| `cert` | TLS certificate expiry check (remote TLS + local files; STARTTLS, SNI, glob) |
-| `conntrack` | Linux conntrack table usage — prevent silent packet drops |
-| `cpu` | CPU utilization and per-core normalized load average |
-| `disk` | Disk space, inode, and writability check |
-| `dns` | DNS resolution check |
-| `docker` | Docker container monitoring (state, restart, health, CPU/mem) |
-| `exec` | Run scripts/commands to produce events (JSON and Nagios modes) |
-| `filecheck` | File existence, mtime, and checksum check |
-| `filefd` | System-level file descriptor usage (Linux) |
-| `http` | HTTP availability, status code, response body, cert expiry |
-| `journaltail` | Incremental journalctl log reading with keyword matching (Linux) |
-| `logfile` | Log file monitoring (offset tracking, rotation, glob, multi-encoding) |
-| `mem` | Memory and swap usage check |
-| `mount` | Mount point baseline (fs type, options compliance; Linux) |
-| `neigh` | ARP/neighbor table usage — prevent new-IP failures (K8s) |
-| `net` | TCP/UDP connectivity and response time |
-| `netif` | Network interface health (link state, error/drop delta; Linux) |
-| `ntp` | NTP sync, clock offset, stratum (Linux) |
-| `ping` | ICMP reachability, packet loss, latency |
-| `procfd` | Per-process fd usage — prevent nofile exhaustion |
-| `procnum` | Process count check (multiple lookup methods) |
-| `scriptfilter` | Script output filter-rule matching |
-| `secmod` | SELinux/AppArmor baseline (Linux) |
-| `sockstat` | TCP listen queue overflow detection (Linux) |
-| `sysctl` | Kernel parameter baseline — detect silent resets (Linux) |
-| `systemd` | systemd service status (Linux) |
-| `tcpstate` | TCP state monitoring (CLOSE_WAIT/TIME_WAIT; Netlink; Linux) |
-| `uptime` | Unexpected reboot detection |
-| `zombie` | Zombie process detection |
+### 🧠 5-Layer Deep Diagnosis
 
-## 🧠 AI Diagnostic Tools (70+)
+| Layer | What We Find | Example |
+|-------|--------------|---------|
+| **1. Symptom** | What triggered the alert | CPU 92%, threshold 80% |
+| **2. Direct Cause** | Which process/component | myapp (PID 12345), 89% CPU |
+| **3. Root Cause** | Why it happened | Large JSON serialization, no pagination |
+| **4. Impact** | What else is affected | API latency 50ms → 3200ms, connection pool 85% |
+| **5. Prevention** | How to prevent recurrence | Add pagination, limit response size |
 
-When AI diagnosis is triggered (by alert, inspection, or chat), the AI agent has access to a rich toolkit:
+### 🔧 79+ Built-in Diagnostic Tools
 
-⚙️ **System & Process**: CPU top, memory breakdown, OOM history, cgroup limits, process threads (with wchan), open files, environment variables, PSI pressure
+**System Layer**: CPU, Memory, Disk, Network, Process, File Descriptors
 
-🌐 **Network**: ping, traceroute, DNS resolve, ARP neighbors, TCP connection states, socket details (RTT/cwnd), retransmission rate, connection latency summary, listen queue overflow, TCP tuning check, softnet stats, route table, IP addresses, interface stats, firewall rules
+**Network Layer**: Connections, TCP states, Retransmission, Latency, DNS, Firewall
 
-💾 **Storage**: disk I/O latency, block device topology, LVM status, mount info
+**Storage Layer**: I/O latency, Block devices, LVM, Mount points
 
-🔐 **Kernel & Security**: dmesg, interrupts distribution, conntrack stats, NUMA stats, thermal zones, sysctl snapshot, SELinux/AppArmor status, coredump list
+**Security Layer**: SELinux, AppArmor, Audit logs, Conntrack
 
-📜 **Logs**: log tail, log grep (with pattern matching), journald query
+**Application Layer**: Stack traces for Go/Java/Python/Node.js
 
-🐳 **Services**: systemd service status, failed services list, timer list, Docker ps/inspect
+### 🎯 Code-Level Visibility
 
-🔌 **Remote plugins** (Redis, etc.) contribute their own specialized diagnostic tools for deep introspection.
+```go
+// DeepTrace can capture stack traces and show you exactly where code is stuck
+goroutine 1 [running]:
+encoding/json.Marshal()
+    /usr/local/go/src/encoding/json/encode.go:161
+main.handleRequest()
+    /opt/myapp/handler.go:45  ← Problem is here
+main.main()
+    /opt/myapp/main.go:23
+```
 
-🔗 **MCP external tools**: Connect Prometheus, Jaeger, CMDB, or any MCP-compatible data source — the AI automatically discovers and uses their tools.
+### 💬 Dual-Mode Reports
 
-## 🖥️ CLI Commands
+**For Ops** — Quick summary + actionable commands:
+- Problem: myapp CPU 89%
+- Action: `top -p 12345` or `systemctl restart myapp`
+
+**For Devs** — Stack traces + code location + root cause:
+- File: `handler.go:45`
+- Cause: Large JSON serialization without pagination
+
+### 📡 Multi-Channel Notifications
+
+- DingTalk (钉钉) — Native Markdown support
+- Feishu (飞书) — Via FlashDuty integration
+- WeChat Work (企业微信) — Via FlashDuty integration
+- PagerDuty — For international teams
+- Generic Webhook — Any HTTP endpoint
+
+## 📦 Installation
 
 ```bash
-catpaw run [flags]                      # Start the monitoring agent
-catpaw chat [-v]                        # Interactive AI chat for troubleshooting
-catpaw inspect <plugin> [target]        # Proactive AI health inspection
-catpaw diagnose list|show <id>          # View past diagnosis records
-catpaw selftest [filter] [-q]           # Smoke-test all diagnostic tools
-catpaw mcptest                          # Test MCP server connections
+# Download from releases
+wget https://github.com/Oumu33/deeptrace/releases/latest/download/deeptrace-linux-amd64
+chmod +x deeptrace-linux-amd64
+sudo mv deeptrace-linux-amd64 /usr/local/bin/deeptrace
+
+# Or build from source
+git clone https://github.com/Oumu33/deeptrace.git
+cd deeptrace
+go build -o deeptrace .
 ```
 
-## 🚀 Quick Start
+## ⚡ Quick Start
 
-### 📦 Installation
+### 1. Basic Monitoring
 
-Download the binary from [GitHub Releases](https://github.com/cprobe/catpaw/releases).
-
-### Basic Monitoring
-
-1. Enable plugin configs under `conf.d/p.<plugin>/`
-2. Start:
-
-```bash
-./catpaw run
-```
-
-The default config enables `[notify.console]`, so events are printed to the terminal with colored output — no external service needed for a quick test.
-
-### 📡 Event Notification
-
-catpaw supports multiple notification channels. Configure one or more in `conf.d/config.toml`:
-
-| Channel | Config Section | Description |
-| --- | --- | --- |
-| **Console** | `[notify.console]` | Print events to terminal (enabled by default) |
-| **WebAPI** | `[notify.webapi]` | Push raw Event JSON to any HTTP endpoint |
-| **Flashduty** | `[notify.flashduty]` | Forward to [Flashduty](https://flashcat.cloud/product/flashduty/) alert platform |
-| **PagerDuty** | `[notify.pagerduty]` | Forward to [PagerDuty](https://www.pagerduty.com/) incident management |
-
-Multiple channels can be active simultaneously. For example, you can print to console for debugging while also forwarding to your alert platform.
-
-**Console** (default — for quick validation):
+Create `conf.d/config.toml`:
 
 ```toml
+[global]
+interval = "30s"
+
 [notify.console]
 enabled = true
 ```
 
-**WebAPI** (push raw Event JSON to any HTTP endpoint):
+Create CPU monitor `conf.d/p.cpu/cpu.toml`:
 
 ```toml
-[notify.webapi]
-url = "https://your-service.example.com/api/v1/events"
-# method = "POST"
-# timeout = "10s"
-[notify.webapi.headers]
-Authorization = "Bearer ${WEBAPI_TOKEN}"
+[[instances]]
+targets = ["localhost"]
+
+[[instances.alerts]]
+check = "cpu_usage"
+warn_ge = 80
+crit_ge = 95
 ```
 
-**Flashduty**:
+Run:
 
-```toml
-[notify.flashduty]
-integration_key = "your-integration-key"
+```bash
+./deeptrace run
 ```
 
-**PagerDuty**:
-
-```toml
-[notify.pagerduty]
-routing_key = "your-routing-key"
-```
-
-### 🤖 AI Diagnosis (optional)
+### 2. Enable AI Diagnosis
 
 Add to `conf.d/config.toml`:
 
 ```toml
 [ai]
 enabled = true
-model_priority = ["default"]
+model_priority = ["gpt4o"]
+report_style = "professional"  # professional / casual / humorous
 
-[ai.models.default]
+[ai.models.gpt4o]
 base_url = "https://api.openai.com/v1"
 api_key = "${OPENAI_API_KEY}"
 model = "gpt-4o"
 ```
 
-Now when alerts fire, AI automatically analyzes root cause using built-in diagnostic tools.
+Now when alerts fire, DeepTrace automatically:
+1. Collects diagnostic data using 79+ tools
+2. Analyzes root cause with AI
+3. Generates 5-layer deep diagnosis report
+4. Pushes report to your notification channel
 
-### 💬 Interactive Chat
+### 3. Interactive Troubleshooting
 
 ```bash
-./catpaw chat
+./deeptrace chat
 ```
 
-Ask questions like "Why is CPU high?" or "Check disk I/O latency" — the AI uses diagnostic tools and shell commands (with confirmation) to investigate.
+Ask anything:
+- "Why is CPU high on this server?"
+- "Check Redis memory usage and find big keys"
+- "Show me network connections to 10.0.0.1"
 
-### 🔗 MCP External Data Sources (optional)
+### 4. Proactive Health Inspection
 
-Connect Prometheus, Jaeger, or other MCP servers for AI to query historical metrics, traces, etc.:
+```bash
+# Inspect Redis
+./deeptrace inspect redis 10.0.0.1:6379
+
+# Inspect local system
+./deeptrace inspect cpu
+./deeptrace inspect mem
+./deeptrace inspect disk
+```
+
+## 🎨 Report Example
+
+Here's what you'll see in DingTalk when CPU alert fires:
+
+```
+🚨 CPU告警 - 生产服务器
+
+告警级别: ⚠️ Warning
+主机: prod-server-01 (192.168.1.10)
+当前值: CPU 92.3%（阈值 ≥80%）
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📊 问题概述
+CPU 使用率持续升高，由 myapp 进程导致
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🔍 根因分析（深度诊断）
+
+Layer 1 - 现象确认 ✅
+CPU 使用率 92.3%，已超阈值
+
+Layer 2 - 直接原因 ✅
+进程: myapp (PID: 12345)
+CPU 占用: 89%，内存: 2.1GB
+
+Layer 3 - 根本原因 ✅
+堆栈显示阻塞在 json.Marshal
+根因: API 返回全量数据，缺少分页
+
+Layer 4 - 关联影响 ✅
+API 响应时间: 50ms → 3200ms
+下游调用方出现超时告警
+
+Layer 5 - 预防措施 ✅
+后端添加分页，限制单次返回数量
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+✅ 建议操作
+
+运维立即执行:
+1. top -p 12345 确认进程状态
+2. systemctl restart myapp
+
+转交开发处理:
+1. 检查 /api/users/list 接口
+2. 添加分页参数
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📎 代码位置
+handler.go:45 ← 问题代码位置
+
+诊断深度: 5/5 层
+诊断耗时: 3.2s
+```
+
+## 🛠️ Supported Languages for Stack Trace
+
+| Language | Tool | Requirement |
+|----------|------|-------------|
+| Go | pprof endpoint | Program exposes pprof |
+| Java | jstack | JDK installed |
+| Python | py-spy | `pip install py-spy` |
+| Node.js | llnode/lldb | llnode installed |
+| Generic | gdb | gdb installed + debug symbols |
+
+## 📋 Plugin List
+
+| Plugin | Description |
+|--------|-------------|
+| `cpu` | CPU utilization and load average |
+| `mem` | Memory and swap usage |
+| `disk` | Disk space and I/O |
+| `network` | Network interfaces and connections |
+| `redis` | Redis monitoring and diagnosis |
+| `docker` | Docker container status |
+| `systemd` | Service health check |
+| `http` | HTTP endpoint probing |
+| `dns` | DNS resolution check |
+| `ping` | ICMP reachability |
+| ... | 25+ plugins total |
+
+## 🔌 MCP Integration
+
+Connect external data sources:
 
 ```toml
-[ai.mcp]
-enabled = true
-
 [[ai.mcp.servers]]
 name = "prometheus"
 command = "/usr/local/bin/mcp-prometheus"
-args = ["serve"]
-identity = 'instance="${IP}:9100"'
 [ai.mcp.servers.env]
-PROMETHEUS_URL = "http://127.0.0.1:9090"
-
-[[ai.mcp.servers]]
-name = "nightingale"
-command = "npx"
-args = ["-y", "@n9e/n9e-mcp-server", "stdio"]
-identity = 'ident="${HOSTNAME}"'
-tools_allow = []
-[ai.mcp.servers.env]
-N9E_TOKEN = "480c04ed-ebe7-4266-xxxx-f8daf7819a6d"
-N9E_BASE_URL = "http://127.0.0.1:17000"
+PROMETHEUS_URL = "http://localhost:9090"
 ```
 
-Verify connectivity:
+AI can now query Prometheus for historical metrics during diagnosis.
 
-```bash
-./catpaw mcptest
-```
+## 🤝 Contributing
 
-## ⚙️ Configuration
+Contributions are welcome! Please read our [Contributing Guide](CONTRIBUTING.md).
 
-- Global config: `conf.d/config.toml`
-- Plugin configs: `conf.d/p.<plugin>/*.toml` (multiple files merged on load)
-- Hot-reload plugin configs with `SIGHUP`:
+## 📄 License
 
-```bash
-kill -HUP $(pidof catpaw)
-```
+MIT License - see [LICENSE](LICENSE) for details.
 
-## 📚 Documentation
+---
 
-| Document | Description |
-| --- | --- |
-| [Developer Guide](docs/dev-guide.md) | Architecture overview and codebase walkthrough — **read this first** |
-| [CLI Reference](docs/cli.md) | Complete command-line options |
-| [Deployment Guide](docs/deployment.md) | Binary, systemd, Docker deployment |
-| [Event Data Model](docs/event-model.md) | Event structure, labels, AlertKey rules |
-| [Plugin Development Guide](docs/plugin-development.md) | How to create a new catpaw plugin |
-
-## 💬 Community
-
-WeChat: add `picobyte` and mention `catpaw` to join the group.
+<p align="center">
+  <b>Stop guessing. Start tracing.</b><br>
+  <sub>Built with ❤️ for ops and devs who hate 3 AM debugging sessions</sub>
+</p>

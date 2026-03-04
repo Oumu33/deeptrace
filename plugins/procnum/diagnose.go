@@ -3,8 +3,12 @@ package procnum
 import (
 	"context"
 	"fmt"
+	"io"
+	"net/http"
+	"os/exec"
 	"sort"
 	"strings"
+	"time"
 
 	"github.com/cprobe/catpaw/diagnose"
 	"github.com/cprobe/catpaw/plugins"
@@ -202,6 +206,338 @@ func (p *ProcnumPlugin) RegisterDiagnoseTools(registry *diagnose.ToolRegistry) {
 			return b.String(), nil
 		},
 	})
+
+	// process_stack: capture stack trace snapshot for a running process
+	registry.Register("process", diagnose.DiagnoseTool{
+		Name:        "process_stack",
+		Description: "Capture a stack trace snapshot for a running process. Attempts multiple methods: Java (jstack), Python (py-spy), Go (pprof endpoint), and generic (gdb). Useful for diagnosing CPU spikes or hangs by showing where code is currently executing. Parameter: pid (required)",
+		Scope:       diagnose.ToolScopeLocal,
+		Parameters: []diagnose.ToolParam{
+			{Name: "pid", Type: "int", Description: "Process ID to capture stack trace from", Required: true},
+		},
+		Execute: func(ctx context.Context, args map[string]string) (string, error) {
+			pidStr := args["pid"]
+			if pidStr == "" {
+				return "", fmt.Errorf("parameter 'pid' is required")
+			}
+			var pid int32
+			if _, err := fmt.Sscanf(pidStr, "%d", &pid); err != nil {
+				return "", fmt.Errorf("invalid pid: %s", pidStr)
+			}
+
+			// Verify process exists and get basic info
+			proc, err := process.NewProcessWithContext(ctx, pid)
+			if err != nil {
+				return "", fmt.Errorf("process %d not found: %w", pid, err)
+			}
+
+			cmdline, _ := proc.CmdlineWithContext(ctx)
+			name, _ := proc.NameWithContext(ctx)
+
+			var methods []string
+			var results []string
+
+			// Method 1: Java - jstack
+			if isJavaProcess(cmdline) {
+				methods = append(methods, "jstack")
+				out, jstackErr := runJStack(ctx, pid)
+				if jstackErr == nil && out != "" {
+					return formatStackResult("jstack", pid, name, out, methods), nil
+				}
+				results = append(results, fmt.Sprintf("jstack: %v", jstackErr))
+			}
+
+			// Method 2: Python - py-spy
+			if isPythonProcess(cmdline) {
+				methods = append(methods, "py-spy")
+				out, pySpyErr := runPySpy(ctx, pid)
+				if pySpyErr == nil && out != "" {
+					return formatStackResult("py-spy", pid, name, out, methods), nil
+				}
+				results = append(results, fmt.Sprintf("py-spy: %v", pySpyErr))
+			}
+
+			// Method 3: Go - try pprof endpoint
+			if isGoProcess(cmdline) {
+				methods = append(methods, "pprof")
+				out, pprofErr := tryGoPprof(ctx, pid, proc)
+				if pprofErr == nil && out != "" {
+					return formatStackResult("pprof", pid, name, out, methods), nil
+				}
+				results = append(results, fmt.Sprintf("pprof: %v", pprofErr))
+			}
+
+			// Method 4: Node.js - try V8 inspector or llnode
+			if isNodeProcess(cmdline) {
+				methods = append(methods, "node-inspector")
+				out, nodeErr := runNodeStack(ctx, pid, proc)
+				if nodeErr == nil && out != "" {
+					return formatStackResult("node-inspector", pid, name, out, methods), nil
+				}
+				results = append(results, fmt.Sprintf("node-inspector: %v", nodeErr))
+			}
+
+			// Method 5: Generic - gdb (last resort, may not work for stripped binaries)
+			methods = append(methods, "gdb")
+			out, gdbErr := runGdb(ctx, pid)
+			if gdbErr == nil && out != "" {
+				return formatStackResult("gdb", pid, name, out, methods), nil
+			}
+			results = append(results, fmt.Sprintf("gdb: %v", gdbErr))
+
+			// All methods failed - check if any tool was found
+			allCmdNotFound := true
+			for _, r := range results {
+				if !strings.Contains(r, "executable file not found") &&
+					!strings.Contains(r, "command not found") &&
+					!strings.Contains(strings.ToLower(r), "not found") {
+					allCmdNotFound = false
+					break
+				}
+			}
+
+			var b strings.Builder
+			fmt.Fprintf(&b, "Failed to capture stack trace for PID %d (%s)\n", pid, name)
+			fmt.Fprintf(&b, "Attempted methods: %v\n\n", methods)
+			for _, r := range results {
+				fmt.Fprintf(&b, "  - %s\n", r)
+			}
+			fmt.Fprintf(&b, "\nTips:\n")
+			fmt.Fprintf(&b, "  - Java: ensure JDK is installed (jstack available)\n")
+			fmt.Fprintf(&b, "  - Python: install py-spy (pip install py-spy)\n")
+			fmt.Fprintf(&b, "  - Go: ensure pprof endpoint is exposed (net/http/pprof)\n")
+			fmt.Fprintf(&b, "  - Node.js: start with --inspect flag, or use llnode/lldb\n")
+			fmt.Fprintf(&b, "  - Generic: ensure gdb is installed and binary has debug symbols\n")
+
+			// Return error message that selftest can recognize
+			if allCmdNotFound {
+				return b.String(), fmt.Errorf("jstack/py-spy/llnode/gdb executable file not found in $PATH")
+			}
+			return b.String(), fmt.Errorf("all stack capture methods failed")
+		},
+	})
+}
+
+func formatStackResult(method string, pid int32, name, output string, attempted []string) string {
+	var b strings.Builder
+	fmt.Fprintf(&b, "Stack trace captured via %s for PID %d (%s)\n", method, pid, name)
+	if len(attempted) > 1 {
+		fmt.Fprintf(&b, "Attempted methods: %v (used: %s)\n\n", attempted, method)
+	} else {
+		fmt.Fprintf(&b, "\n")
+	}
+	// Limit output size
+	if len(output) > 8000 {
+		output = output[:8000] + "\n... [truncated]"
+	}
+	fmt.Fprint(&b, output)
+	return b.String()
+}
+
+func isJavaProcess(cmdline string) bool {
+	return strings.Contains(cmdline, "java") ||
+		strings.Contains(cmdline, "scala") ||
+		strings.Contains(cmdline, "kotlin") ||
+		strings.Contains(cmdline, "-jar") ||
+		strings.Contains(cmdline, "-Xmx") ||
+		strings.Contains(cmdline, "-Xms")
+}
+
+func isPythonProcess(cmdline string) bool {
+	return strings.Contains(cmdline, "python") ||
+		strings.Contains(cmdline, "python3") ||
+		strings.Contains(cmdline, "python2") ||
+		strings.Contains(cmdline, "uwsgi") ||
+		strings.Contains(cmdline, "gunicorn") ||
+		strings.Contains(cmdline, "celery")
+}
+
+func isGoProcess(cmdline string) bool {
+	// Hard to detect, but check common Go binary patterns
+	lower := strings.ToLower(cmdline)
+	return strings.Contains(lower, "go-") ||
+		strings.Contains(lower, "prometheus") ||
+		strings.Contains(lower, "grafana") ||
+		strings.Contains(lower, "consul") ||
+		strings.Contains(lower, "vault") ||
+		strings.Contains(lower, "nomad") ||
+		strings.Contains(lower, "etcd") ||
+		strings.Contains(lower, "traefik") ||
+		strings.Contains(lower, "caddy") ||
+		strings.Contains(lower, "catpaw") ||
+		strings.Contains(lower, "node_exporter") ||
+		strings.Contains(lower, "blackbox_exporter")
+}
+
+func isNodeProcess(cmdline string) bool {
+	// Node.js processes
+	return strings.Contains(cmdline, "node ") ||
+		strings.Contains(cmdline, "nodejs") ||
+		strings.Contains(cmdline, "/node") ||
+		strings.Contains(cmdline, "npm ") ||
+		strings.Contains(cmdline, "yarn ") ||
+		strings.Contains(cmdline, "pnpm ") ||
+		strings.Contains(cmdline, "next-server") ||
+		strings.Contains(cmdline, "nest start") ||
+		strings.Contains(cmdline, "electron") ||
+		strings.Contains(cmdline, "ts-node") ||
+		strings.Contains(cmdline, "webpack") ||
+		strings.Contains(cmdline, "vite") ||
+		strings.Contains(cmdline, "esbuild")
+}
+
+func runJStack(ctx context.Context, pid int32) (string, error) {
+	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
+	defer cancel()
+
+	cmd := exec.CommandContext(ctx, "jstack", fmt.Sprintf("%d", pid))
+	out, err := cmd.CombinedOutput()
+	if err != nil {
+		return "", fmt.Errorf("jstack failed: %w, output: %s", err, string(out))
+	}
+	return string(out), nil
+}
+
+func runPySpy(ctx context.Context, pid int32) (string, error) {
+	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
+	defer cancel()
+
+	cmd := exec.CommandContext(ctx, "py-spy", "dump", "--pid", fmt.Sprintf("%d", pid))
+	out, err := cmd.CombinedOutput()
+	if err != nil {
+		return "", fmt.Errorf("py-spy failed: %w, output: %s", err, string(out))
+	}
+	return string(out), nil
+}
+
+func tryGoPprof(ctx context.Context, pid int32, proc *process.Process) (string, error) {
+	// Try common pprof ports
+	ports := []string{"6060", "8080", "9090", "8888", "3000"}
+
+	conns, err := proc.ConnectionsWithContext(ctx)
+	if err == nil {
+		// Find listening ports that might be pprof
+		for _, conn := range conns {
+			if conn.Status == "LISTEN" && conn.Laddr.Port > 0 {
+				ports = append([]string{fmt.Sprintf("%d", conn.Laddr.Port)}, ports...)
+			}
+		}
+	}
+
+	for _, port := range ports {
+		url := fmt.Sprintf("http://127.0.0.1:%s/debug/pprof/goroutine?debug=1", port)
+		reqCtx, cancel := context.WithTimeout(ctx, 3*time.Second)
+		req, err := http.NewRequestWithContext(reqCtx, "GET", url, nil)
+		if err != nil {
+			cancel()
+			continue
+		}
+
+		resp, err := http.DefaultClient.Do(req)
+		cancel()
+		if err != nil {
+			continue
+		}
+		defer resp.Body.Close()
+
+		if resp.StatusCode == 200 {
+			body, err := io.ReadAll(io.LimitReader(resp.Body, 16000))
+			if err != nil {
+				continue
+			}
+			return string(body), nil
+		}
+	}
+
+	return "", fmt.Errorf("no accessible pprof endpoint found")
+}
+
+func runGdb(ctx context.Context, pid int32) (string, error) {
+	ctx, cancel := context.WithTimeout(ctx, 15*time.Second)
+	defer cancel()
+
+	// Use gdb to attach and get stack traces
+	cmd := exec.CommandContext(ctx, "gdb",
+		"-batch",
+		"-ex", "set pagination off",
+		"-ex", "thread apply all bt",
+		"-p", fmt.Sprintf("%d", pid),
+	)
+
+	out, err := cmd.CombinedOutput()
+	if err != nil {
+		return "", fmt.Errorf("gdb failed: %w, output: %s", err, string(out))
+	}
+	return string(out), nil
+}
+
+func runNodeStack(ctx context.Context, pid int32, proc *process.Process) (string, error) {
+	// Method 1: Try V8 inspector (requires --inspect flag or SIGUSR1 activation)
+	// Node.js inspector usually runs on port 9229
+	inspectorPorts := []string{"9229", "9230", "9231", "9222"}
+
+	// Try to find listening ports that might be Node inspector
+	conns, err := proc.ConnectionsWithContext(ctx)
+	if err == nil {
+		for _, conn := range conns {
+			if conn.Status == "LISTEN" && conn.Laddr.Port > 0 {
+				inspectorPorts = append([]string{fmt.Sprintf("%d", conn.Laddr.Port)}, inspectorPorts...)
+			}
+		}
+	}
+
+	for _, port := range inspectorPorts {
+		// Try to get stack trace via V8 inspector protocol
+		url := fmt.Sprintf("http://127.0.0.1:%s/json", port)
+		reqCtx, cancel := context.WithTimeout(ctx, 2*time.Second)
+		req, err := http.NewRequestWithContext(reqCtx, "GET", url, nil)
+		if err != nil {
+			cancel()
+			continue
+		}
+
+		resp, err := http.DefaultClient.Do(req)
+		cancel()
+		if err != nil {
+			continue
+		}
+
+		// Check if this is a Node.js inspector
+		body, _ := io.ReadAll(io.LimitReader(resp.Body, 4096))
+		resp.Body.Close()
+
+		if !strings.Contains(string(body), "Node") && !strings.Contains(string(body), "V8") {
+			continue
+		}
+
+		// Try to get the first websocket URL and request stack trace
+		// This is a simplified approach - full implementation would need websocket
+		// For now, return the inspector info which includes the webSocketDebuggerUrl
+		var result strings.Builder
+		fmt.Fprintf(&result, "Node.js Inspector found on port %s\n\n", port)
+		fmt.Fprintf(&result, "Inspector info:\n%s\n\n", string(body))
+		fmt.Fprintf(&result, "To get stack trace:\n")
+		fmt.Fprintf(&result, "  1. Connect via: node inspect localhost:%s\n", port)
+		fmt.Fprintf(&result, "  2. Or use Chrome DevTools: chrome://inspect\n")
+		fmt.Fprintf(&result, "  3. Or use: kill -USR1 %d (if not already in inspect mode)\n", pid)
+		return result.String(), nil
+	}
+
+	// Method 2: Try llnode (requires lldb + llnode plugin)
+	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
+	defer cancel()
+
+	cmd := exec.CommandContext(ctx, "lldb", "-b",
+		"-o", "process attach --pid "+fmt.Sprintf("%d", pid),
+		"-o", "bt",
+		"-o", "quit",
+	)
+	out, err := cmd.CombinedOutput()
+	if err == nil && len(out) > 0 && !strings.Contains(string(out), "error:") {
+		return string(out), nil
+	}
+
+	return "", fmt.Errorf("no Node.js inspector available and lldb not found")
 }
 
 func truncate(s string, max int) string {

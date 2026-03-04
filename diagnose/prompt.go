@@ -75,6 +75,18 @@ catpaw 监控系统检测到以下告警：
 2. 根据初步结果，针对性地深入检查可疑领域
 3. 如果是远端服务，同时关注基础设施层面可能影响服务的因素
 4. **每轮尽可能并行调用多个工具**，减少交互轮次
+
+## 巡检深度要求
+
+请按以下层次检查，不要遗漏潜在问题：
+
+**Layer 1 - 基础指标**：核心性能指标是否正常（CPU/内存/连接数等）
+**Layer 2 - 配置检查**：关键配置是否合理（超时/缓存/连接池等）
+**Layer 3 - 资源趋势**：是否有资源即将耗尽的迹象
+**Layer 4 - 潜在风险**：是否有隐藏的问题（慢查询/大 key/碎片等）
+**Layer 5 - 优化建议**：有哪些可以改进的地方
+
+巡检过程中，确保覆盖到 Layer 3 及以上，发现潜在风险比确认已知问题更有价值。
 {{- else}}
 
 ## 诊断策略
@@ -91,6 +103,18 @@ catpaw 监控系统检测到以下告警：
 {{- else}}
 - catpaw 与目标 {{.Target}} 在同一台机器上，本机基础设施工具可直接用于辅助诊断
 {{- end}}
+
+## 诊断深度要求
+
+请按以下层次分析问题，不要停在表层：
+
+**Layer 1 - 现象确认**：告警指标是什么？当前值多少？（已提供）
+**Layer 2 - 直接原因**：哪个进程/组件导致的？（需调用工具确认）
+**Layer 3 - 根本原因**：为什么会出现这个问题？代码层面还是配置层面？
+**Layer 4 - 关联影响**：是否影响其他系统？是否有连锁反应？
+**Layer 5 - 预防措施**：如何避免再次发生？需要什么改进？
+
+诊断过程中，在思考时标注当前分析的层级。如果停在 Layer 2 及以下，说明诊断不够深入，请继续调查。
 
 ## 输出要求
 
@@ -126,6 +150,13 @@ catpaw 监控系统检测到以下告警：
 {{- if ne .Language "zh"}}
 
 IMPORTANT: You MUST respond in {{.Language}}. All output including section headers, analysis, and recommendations must be in {{.Language}}.
+{{- end}}
+{{- if eq .ReportStyle "casual"}}
+
+输出风格：请用轻松口语化的方式输出报告，可以适当使用比喻让技术问题更容易理解，但不要牺牲准确性。
+{{- else if eq .ReportStyle "humorous"}}
+
+输出风格：请用幽默风趣的方式输出报告，可以用职场梗、生活比喻来描述系统问题，缓解运维人员的告警疲劳。比如可以把 CPU 飙高比作"打工人疯狂加班"，把内存泄漏比作"只进不出的貔貅"等。但核心信息必须准确，不要影响问题的严重性判断。
 {{- end}}`
 
 type promptData struct {
@@ -138,17 +169,18 @@ type promptData struct {
 	IsRemoteTarget bool
 	LocalHost      string
 	Language       string
+	ReportStyle    string
 }
 
-func buildSystemPrompt(req *DiagnoseRequest, directTools, toolCatalog, localHost string, isRemote bool, language string) string {
-	return renderPrompt(ModeAlert, req, directTools, toolCatalog, localHost, isRemote, language)
+func buildSystemPrompt(req *DiagnoseRequest, directTools, toolCatalog, localHost string, isRemote bool, language, reportStyle string) string {
+	return renderPrompt(ModeAlert, req, directTools, toolCatalog, localHost, isRemote, language, reportStyle)
 }
 
-func buildInspectPrompt(req *DiagnoseRequest, directTools, toolCatalog, localHost string, isRemote bool, language string) string {
-	return renderPrompt(ModeInspect, req, directTools, toolCatalog, localHost, isRemote, language)
+func buildInspectPrompt(req *DiagnoseRequest, directTools, toolCatalog, localHost string, isRemote bool, language, reportStyle string) string {
+	return renderPrompt(ModeInspect, req, directTools, toolCatalog, localHost, isRemote, language, reportStyle)
 }
 
-func renderPrompt(mode string, req *DiagnoseRequest, directTools, toolCatalog, localHost string, isRemote bool, language string) string {
+func renderPrompt(mode string, req *DiagnoseRequest, directTools, toolCatalog, localHost string, isRemote bool, language, reportStyle string) string {
 	data := promptData{
 		Mode:           mode,
 		Plugin:         req.Plugin,
@@ -159,6 +191,7 @@ func renderPrompt(mode string, req *DiagnoseRequest, directTools, toolCatalog, l
 		IsRemoteTarget: isRemote,
 		LocalHost:      localHost,
 		Language:       language,
+		ReportStyle:    reportStyle,
 	}
 
 	var buf bytes.Buffer

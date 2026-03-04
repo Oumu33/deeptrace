@@ -1,250 +1,248 @@
-[English](README.md) | 中文
+# DeepTrace
 
-# 🐾 catpaw
+> **AI 驱动的生产系统深度诊断引擎**
 
-catpaw 是一个轻量的监控 Agent，具备 **AI 智能诊断**能力。
-它通过插件化检查探测异常、产出标准事件，并在告警触发时自动调用 AI 进行根因分析——内置 70+ 诊断工具，覆盖系统、网络、存储、安全等各个维度。
+[![Go Version](https://img.shields.io/badge/Go-1.21%2B-00ADD8?style=flat&logo=go)](https://go.dev/)
+[![License](https://img.shields.io/badge/License-MIT-green?style=flat)](LICENSE)
 
-事件可推送到任意告警平台（Flashduty、PagerDuty 或任何 HTTP 端点），也可直接输出到控制台快速验证。
+---
 
-## ✨ 核心特点
+## DeepTrace 是什么？
 
-- 🪶 **轻量无重依赖** — 单二进制，部署简单
-- 🔌 **插件化监控** — 25+ 检查插件，按需启用
-- 🤖 **AI 自动诊断** — 告警触发后自动分析根因
-- 💬 **AI 交互排障** — 命令行对话式排障，AI + 工具联动
-- 🩺 **主动健康巡检** — 按需对目标执行 AI 驱动的深度检查
-- 🛠️ **70+ 诊断工具** — 系统、网络、存储、安全、进程、内核全覆盖
-- 🔗 **MCP 集成** — 通过 [Model Context Protocol](https://modelcontextprotocol.io/) 接入 Prometheus、Jaeger、CMDB 等外部数据源
-- 📡 **灵活通知** — 控制台、通用 WebAPI、Flashduty、PagerDuty，可同时开启多个
-- 🔄 **适合自监控** — 监控系统的监控系统，避免循环依赖
+DeepTrace 是一个智能诊断引擎，超越传统监控告警。当系统出问题时，它不只告诉你**发生了什么**，还会告诉你**为什么**以及**代码在哪里**。
 
-## 🏗️ 架构概览
-
-```text
-┌─────────────────────────────────────────────────────────────────┐
-│                        catpaw agent                             │
-│                                                                 │
-│  ┌─────────────┐   告警    ┌──────────────┐    AI + 工具       │
-│  │  25+ 检查   │ ────────── │  AI 诊断    │ ──────────────┐   │
-│  │    插件     │   触发     │    引擎     │               │   │
-│  └──────┬──────┘            └──────────────┘               │   │
-│         │                                                  ▼   │
-│         │ 事件      ┌──────────────┐         ┌───────────────┐ │
-│         └────────── │   通知渠道   │         │  70+ 诊断    │ │
-│                     │  （多选）    │         │     工具     │ │
-│                     └──────────────┘         └───────┬───────┘ │
-│                                                      │         │
-│  ┌─────────────┐                            ┌────────┴───────┐ │
-│  │  AI Chat    │ ───── 交互式排障 ───────── │  MCP 外部     │ │
-│  │  (命令行)   │                            │  数据源       │ │
-│  └─────────────┘                            └────────────────┘ │
-└─────────────────────────────────────────────────────────────────┘
+```
+传统告警:  "CPU 使用率 92%"
+DeepTrace: "CPU 92% → myapp进程(PID 12345) → json.Marshal阻塞在 handler.go:45
+           → 正在处理 10MB JSON 响应 → API 缺少分页参数"
 ```
 
-## 🔍 检查插件
+## 🚀 核心特性
 
-| 插件 | 说明 |
-| --- | --- |
-| `cert` | TLS 证书有效期检查（远程 TLS + 本地文件，支持 STARTTLS、SNI、glob） |
-| `conntrack` | 连接跟踪表使用率监控，预防表满导致静默丢包（Linux） |
-| `cpu` | CPU 使用率、归一化每核 Load Average 检查 |
-| `disk` | 磁盘空间、inode、可写性检查 |
-| `dns` | DNS 解析检查 |
-| `docker` | Docker 容器监控（运行状态、频繁重启、健康检查、CPU/内存） |
-| `exec` | 执行脚本/命令产生事件（支持 JSON 和 Nagios 模式） |
-| `filecheck` | 文件存在性、mtime、checksum 检查 |
-| `filefd` | 系统级文件描述符使用率监控（Linux） |
-| `http` | HTTP 可用性、状态码、响应体、证书过期检查 |
-| `journaltail` | journalctl 增量日志读取 + 关键词匹配（Linux） |
-| `logfile` | 日志文件监控（偏移量追踪 + 轮转检测 + glob + 多编码） |
-| `mem` | 内存、Swap 使用率检查 |
-| `mount` | 挂载点基线检查（文件系统类型、挂载选项合规，Linux） |
-| `neigh` | ARP/邻居表使用率监控，预防新 IP 通信失败（K8s 重灾区） |
-| `net` | TCP/UDP 连通性与响应时间检查 |
-| `netif` | 网卡健康检查（链路状态、错误/丢包增量，Linux） |
-| `ntp` | NTP 同步状态、时钟偏移、时间源层级检查（Linux） |
-| `ping` | ICMP 可达性、丢包率、时延检查 |
-| `procfd` | 进程级 fd 使用率监控，预防 nofile 耗尽 |
-| `procnum` | 进程数量检查（多种查找方式） |
-| `scriptfilter` | 脚本输出行过滤匹配告警 |
-| `secmod` | SELinux/AppArmor 基线检查（Linux） |
-| `sockstat` | TCP listen 队列溢出检测（Linux） |
-| `sysctl` | 内核参数基线检查，防止重启后静默重置（Linux） |
-| `systemd` | systemd 服务状态检查（Linux） |
-| `tcpstate` | TCP 连接状态监控（CLOSE_WAIT/TIME_WAIT，Netlink 采集，Linux） |
-| `uptime` | 系统异常重启检测 |
-| `zombie` | 僵尸进程检测 |
+### 🧠 五层深度诊断
 
-## 🧠 AI 诊断工具（70+）
+| 层级 | 发现什么 | 示例 |
+|------|---------|------|
+| **1. 现象层** | 告警触发原因 | CPU 92%，阈值 80% |
+| **2. 直接原因** | 哪个进程/组件 | myapp (PID 12345)，CPU 89% |
+| **3. 根本原因** | 为什么发生 | 大 JSON 序列化，无分页 |
+| **4. 关联影响** | 还影响了什么 | API 延迟 50ms → 3200ms |
+| **5. 预防措施** | 如何避免复发 | 添加分页，限制响应大小 |
 
-AI 诊断被触发时（告警、巡检或 Chat），AI Agent 可调用以下工具深入排查：
+### 🔧 79+ 内置诊断工具
 
-⚙️ **系统与进程**：CPU Top、内存分布、OOM 历史、cgroup 限制/用量、进程线程（含 wchan）、打开文件列表、环境变量、PSI 压力指标
+**系统层**：CPU、内存、磁盘、网络、进程、文件描述符
 
-🌐 **网络**：ping、traceroute、DNS 解析、ARP 邻居表、TCP 连接状态、Socket 详情（RTT/cwnd）、重传率、连接延迟分布、Listen 队列溢出、TCP 内核调优检查、softnet 统计、路由表、IP 地址、网卡流量、防火墙规则
+**网络层**：连接状态、TCP 状态、重传率、延迟、DNS、防火墙
 
-💾 **存储**：磁盘 I/O 延迟、块设备拓扑树、LVM 状态、挂载信息
+**存储层**：I/O 延迟、块设备、LVM、挂载点
 
-🔐 **内核与安全**：dmesg 内核日志、中断分布、conntrack 统计、NUMA 内存分布、热区温度、sysctl 快照、SELinux/AppArmor 状态、coredump 列表
+**安全层**：SELinux、AppArmor、审计日志、连接跟踪
 
-📜 **日志**：日志尾部读取、日志 grep（模式匹配）、journald 查询
+**应用层**：Go/Java/Python/Node.js 堆栈追踪
 
-🐳 **服务**：systemd 服务状态、失败服务列表、定时器列表、Docker ps/inspect
+### 🎯 代码级可见性
 
-🔌 **远程插件**（如 Redis）会注册专用诊断工具，用于对目标实例进行深入检查。
+```go
+// DeepTrace 可以捕获堆栈，精确定位代码卡在哪里
+goroutine 1 [running]:
+encoding/json.Marshal()
+    /usr/local/go/src/encoding/json/encode.go:161
+main.handleRequest()
+    /opt/myapp/handler.go:45  ← 问题在这里
+main.main()
+    /opt/myapp/main.go:23
+```
 
-🔗 **MCP 外部工具**：接入 Prometheus、Jaeger、CMDB 或任何 MCP 兼容数据源后，AI 自动发现并使用其提供的工具。
+### 💬 双模式报告
 
-## 🖥️ 命令行
+**运维视角** — 快速摘要 + 可执行命令：
+- 问题：myapp CPU 89%
+- 操作：`top -p 12345` 或 `systemctl restart myapp`
+
+**开发视角** — 堆栈追踪 + 代码位置 + 根因：
+- 文件：`handler.go:45`
+- 原因：大 JSON 序列化，缺少分页
+
+### 📡 多渠道通知
+
+- 钉钉 — 原生 Markdown 支持
+- 飞书 — 通过 FlashDuty 集成
+- 企业微信 — 通过 FlashDuty 集成
+- PagerDuty — 国际化团队
+- 通用 Webhook — 任意 HTTP 端点
+
+## 📦 安装
 
 ```bash
-catpaw run [flags]                      # 启动监控 Agent
-catpaw chat [-v]                        # AI 交互式排障
-catpaw inspect <plugin> [target]        # AI 主动健康巡检
-catpaw diagnose list|show <id>          # 查看历史诊断记录
-catpaw selftest [filter] [-q]           # 诊断工具自检
-catpaw mcptest                          # MCP 连接测试
+# 从 Release 下载
+wget https://github.com/Oumu33/deeptrace/releases/latest/download/deeptrace-linux-amd64
+chmod +x deeptrace-linux-amd64
+sudo mv deeptrace-linux-amd64 /usr/local/bin/deeptrace
+
+# 或从源码构建
+git clone https://github.com/Oumu33/deeptrace.git
+cd deeptrace
+go build -o deeptrace .
 ```
 
-## 🚀 快速开始
+## ⚡ 快速开始
 
-### 📦 安装
+### 1. 基础监控
 
-从 [GitHub Releases](https://github.com/cprobe/catpaw/releases) 下载对应平台的二进制。
-
-### 基础监控
-
-1. 在 `conf.d/p.<plugin>/` 下启用需要的插件配置
-2. 启动：
-
-```bash
-./catpaw run
-```
-
-默认配置已开启 `[notify.console]`，事件会以带颜色的格式输出到终端——无需任何外部服务即可快速验证。
-
-### 📡 事件通知
-
-catpaw 支持多种通知渠道，在 `conf.d/config.toml` 中配置，可同时启用多个：
-
-| 渠道 | 配置段 | 说明 |
-| --- | --- | --- |
-| **控制台** | `[notify.console]` | 输出到终端（默认开启） |
-| **通用 WebAPI** | `[notify.webapi]` | 将原始 Event JSON 推送到任意 HTTP 端点 |
-| **Flashduty** | `[notify.flashduty]` | 对接 [Flashduty](https://flashcat.cloud/product/flashduty/) 告警平台 |
-| **PagerDuty** | `[notify.pagerduty]` | 对接 [PagerDuty](https://www.pagerduty.com/) 事件管理平台 |
-
-**控制台**（默认开启，快速验证）：
+创建 `conf.d/config.toml`：
 
 ```toml
+[global]
+interval = "30s"
+
 [notify.console]
 enabled = true
 ```
 
-**通用 WebAPI**（推送原始 Event JSON 到任意 HTTP 端点）：
+创建 CPU 监控 `conf.d/p.cpu/cpu.toml`：
 
 ```toml
-[notify.webapi]
-url = "https://your-service.example.com/api/v1/events"
-# method = "POST"
-# timeout = "10s"
-[notify.webapi.headers]
-Authorization = "Bearer ${WEBAPI_TOKEN}"
+[[instances]]
+targets = ["localhost"]
+
+[[instances.alerts]]
+check = "cpu_usage"
+warn_ge = 80
+crit_ge = 95
 ```
 
-**Flashduty**：
+运行：
 
-```toml
-[notify.flashduty]
-integration_key = "your-integration-key"
+```bash
+./deeptrace run
 ```
 
-**PagerDuty**：
+### 2. 启用 AI 诊断
 
-```toml
-[notify.pagerduty]
-routing_key = "your-routing-key"
-```
-
-### 🤖 AI 智能诊断（可选）
-
-在 `conf.d/config.toml` 中添加：
+添加到 `conf.d/config.toml`：
 
 ```toml
 [ai]
 enabled = true
-model_priority = ["default"]
+model_priority = ["gpt4o"]
+report_style = "professional"  # professional / casual / humorous
 
-[ai.models.default]
+[ai.models.gpt4o]
 base_url = "https://api.openai.com/v1"
 api_key = "${OPENAI_API_KEY}"
 model = "gpt-4o"
 ```
 
-配置后，告警触发时 AI 会自动调用内置诊断工具分析根因。
+告警触发时，DeepTrace 自动：
+1. 使用 79+ 工具收集诊断数据
+2. AI 分析根因
+3. 生成五层深度诊断报告
+4. 推送到你的通知渠道
 
-### 💬 交互式 Chat
-
-```bash
-./catpaw chat
-```
-
-直接提问，如"CPU 为什么高？"、"检查磁盘 I/O"等，AI 会使用诊断工具和 Shell 命令（需用户确认）进行排查。
-
-### 🔗 MCP 外部数据源（可选）
-
-接入 Prometheus、Jaeger 等 MCP Server，让 AI 能查询历史指标、链路追踪等：
-
-```toml
-[ai.mcp]
-enabled = true
-
-[[ai.mcp.servers]]
-name = "prometheus"
-command = "/usr/local/bin/mcp-prometheus"
-args = ["serve"]
-identity = 'instance="${IP}:9100"'
-[ai.mcp.servers.env]
-PROMETHEUS_URL = "http://127.0.0.1:9090"
-
-[[ai.mcp.servers]]
-name = "nightingale"
-command = "npx"
-args = ["-y", "@n9e/n9e-mcp-server", "stdio"]
-identity = 'ident="${HOSTNAME}"'
-tools_allow = []
-[ai.mcp.servers.env]
-N9E_TOKEN = "480c04ed-ebe7-4266-xxxx-f8daf7819a6d"
-N9E_BASE_URL = "http://127.0.0.1:17000"
-```
-
-验证连通性：
+### 3. 交互式排查
 
 ```bash
-./catpaw mcptest
+./deeptrace chat
 ```
 
-## ⚙️ 配置说明
+随便问：
+- "为什么 CPU 这么高？"
+- "检查 Redis 内存使用，找大 key"
+- "显示到 10.0.0.1 的网络连接"
 
-- 全局配置：`conf.d/config.toml`
-- 插件配置：`conf.d/p.<plugin>/*.toml`（每个目录可放多个 `.toml` 文件，合并加载）
-- 支持 `SIGHUP` 热加载插件配置：
+### 4. 主动健康巡检
 
 ```bash
-kill -HUP $(pidof catpaw)
+# 巡检 Redis
+./deeptrace inspect redis 10.0.0.1:6379
+
+# 巡检本地系统
+./deeptrace inspect cpu
+./deeptrace inspect mem
+./deeptrace inspect disk
 ```
 
-## 📚 详细文档
+## 🎨 报告示例
 
-| 文档 | 说明 |
-| --- | --- |
-| [开发必读](docs/dev-guide.md) | 架构全貌与代码导航 — **新人请先读这篇** |
-| [命令行参数](docs/cli.md) | 完整的命令行参数说明 |
-| [部署指南](docs/deployment.md) | 二进制部署、systemd 服务、Docker 部署 |
-| [事件数据模型](docs/event-model.md) | Event 结构、Labels 设计、AlertKey 规则、告警生命周期 |
-| [插件开发指南](docs/plugin-development.md) | 如何新增一个 catpaw 插件 |
+CPU 告警触发时，钉钉收到的消息：
 
-## 💬 交流
+```
+🚨 CPU告警 - 生产服务器
 
-可加微信 `picobyte` 进群交流，备注 `catpaw`。
+告警级别: ⚠️ Warning
+主机: prod-server-01 (192.168.1.10)
+当前值: CPU 92.3%（阈值 ≥80%）
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📊 问题概述
+CPU 使用率持续升高，由 myapp 进程导致
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🔍 根因分析（深度诊断）
+
+Layer 1 - 现象确认 ✅
+CPU 使用率 92.3%，已超阈值
+
+Layer 2 - 直接原因 ✅
+进程: myapp (PID: 12345)
+CPU 占用: 89%，内存: 2.1GB
+
+Layer 3 - 根本原因 ✅
+堆栈显示阻塞在 json.Marshal
+根因: API 返回全量数据，缺少分页
+
+Layer 4 - 关联影响 ✅
+API 响应时间: 50ms → 3200ms
+下游调用方出现超时告警
+
+Layer 5 - 预防措施 ✅
+后端添加分页，限制单次返回数量
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+✅ 建议操作
+
+运维立即执行:
+1. top -p 12345 确认进程状态
+2. systemctl restart myapp
+
+转交开发处理:
+1. 检查 /api/users/list 接口
+2. 添加分页参数
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📎 代码位置
+handler.go:45 ← 问题代码位置
+
+诊断深度: 5/5 层
+诊断耗时: 3.2s
+```
+
+## 🛠️ 支持堆栈追踪的语言
+
+| 语言 | 工具 | 要求 |
+|------|------|------|
+| Go | pprof 端点 | 程序暴露 pprof |
+| Java | jstack | 安装 JDK |
+| Python | py-spy | `pip install py-spy` |
+| Node.js | llnode/lldb | 安装 llnode |
+| 通用 | gdb | 安装 gdb + 调试符号 |
+
+## 🤝 参与贡献
+
+欢迎提交 Issue 和 Pull Request！
+
+## 📄 许可证
+
+MIT License - 详见 [LICENSE](LICENSE)
+
+---
+
+<p align="center">
+  <b>停止猜测，开始追踪。</b><br>
+  <sub>为讨厌凌晨 3 点调试的运维和开发而构建</sub>
+</p>

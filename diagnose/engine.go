@@ -174,9 +174,9 @@ func (e *DiagnoseEngine) diagnose(ctx context.Context, req *DiagnoseRequest, ses
 	toolCatalog := e.registry.ListToolCatalogSmart()
 	var prompt string
 	if req.Mode == ModeInspect {
-		prompt = buildInspectPrompt(req, directToolsStr, toolCatalog, hostname, isRemote, e.cfg.Language)
+		prompt = buildInspectPrompt(req, directToolsStr, toolCatalog, hostname, isRemote, e.cfg.Language, e.cfg.ReportStyle)
 	} else {
-		prompt = buildSystemPrompt(req, directToolsStr, toolCatalog, hostname, isRemote, e.cfg.Language)
+		prompt = buildSystemPrompt(req, directToolsStr, toolCatalog, hostname, isRemote, e.cfg.Language, e.cfg.ReportStyle)
 	}
 
 	messages := []aiclient.Message{

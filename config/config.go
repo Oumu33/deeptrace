@@ -95,7 +95,8 @@ type AIConfig struct {
 	DiagnoseRetention Duration `toml:"diagnose_retention"`
 	DiagnoseMaxCount  int      `toml:"diagnose_max_count"`
 
-	Language string `toml:"language"`
+	Language    string `toml:"language"`
+	ReportStyle string `toml:"report_style"` // professional / casual / humorous
 
 	MCP MCPConfig `toml:"mcp"`
 }
@@ -245,6 +246,9 @@ func (c *AIConfig) applyDefaults() {
 	}
 	if c.Language == "" {
 		c.Language = "zh"
+	}
+	if c.ReportStyle == "" {
+		c.ReportStyle = "professional"
 	}
 
 	for name, m := range c.Models {

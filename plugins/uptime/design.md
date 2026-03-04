@@ -199,7 +199,6 @@ humanDuration(d):
 
 示例：`10m`、`3m 20s`、`1h`、`2h 30m`、`15d 7h 30m`、`30d`。
 
-短格式便于在 Description 和 FlashDuty 通知中一目了然。同时 attrs 的 `critical_lt` / `warn_lt` 也使用此函数格式化，保持同一事件内所有时间格式风格一致。
 
 ### 关键行为
 

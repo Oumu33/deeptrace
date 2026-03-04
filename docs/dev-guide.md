@@ -28,7 +28,6 @@ deeptrace/
 ├── diagnose/            # AI 诊断子系统：引擎、聚合器、注册表、提示词、记录
 ├── chat/                # 交互式 AI Chat REPL
 ├── mcp/                 # MCP (Model Context Protocol) 客户端，对接外部数据源
-├── notify/              # 通知后端：Console、WebAPI、Flashduty、PagerDuty
 ├── config/              # 配置结构定义与解析
 ├── types/               # 核心类型：Event、状态常量
 ├── logger/              # 日志封装
@@ -178,7 +177,6 @@ type DiagnoseTool struct {
 | `notify.go` | `Notifier` 接口 + 注册/分发逻辑，所有后端同时接收 |
 | `console.go` | 彩色终端输出，默认启用，方便快速验证 |
 | `webapi.go` | 通用 HTTP 推送，把 Event JSON 原样发送到用户 endpoint |
-| `flashduty.go` | Flashduty 告警平台适配 |
 | `pagerduty.go` | PagerDuty Events API v2 适配 |
 
 HTTP 类 Notifier 支持重试退避、超时、自定义 Headers。
@@ -195,7 +193,6 @@ config.toml
 │       └── [[ai.mcp.servers]]  # name、command、args、env、identity、tools_allow
 ├── [notify.console]   # enabled
 ├── [notify.webapi]    # url、method、timeout、headers
-├── [notify.flashduty] # integration_key
 └── [notify.pagerduty] # routing_key
 ```
 

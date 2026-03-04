@@ -70,8 +70,6 @@ main.main()
 ### 📡 Multi-Channel Notifications
 
 - DingTalk (钉钉) — Native Markdown support
-- Feishu (飞书) — Via FlashDuty integration
-- WeChat Work (企业微信) — Via FlashDuty integration
 - PagerDuty — For international teams
 - Generic Webhook — Any HTTP endpoint
 

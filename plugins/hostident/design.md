@@ -56,7 +56,6 @@ t=25m:  Gather: hostname="host-B" → OK（新基准）
 
 ### 关于重启后恢复通知
 
-重启后旧进程的告警状态丢失，新进程不会为旧告警发送恢复通知。这是 deeptrace 告警引擎的通用特性（所有插件都受此影响），不在 hostident 插件层解决。下游平台（FlashDuty、PagerDuty）的超时自动关闭机制可覆盖此场景。
 
 ## 结构体设计
 

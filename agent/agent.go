@@ -94,9 +94,6 @@ func initNotifiers() {
 	if cfg := config.Config.Notify.Console; cfg != nil && cfg.Enabled {
 		notify.Register(notify.NewConsoleNotifier())
 	}
-	if cfg := config.Config.Notify.Flashduty; cfg != nil && cfg.IntegrationKey != "" {
-		notify.Register(notify.NewFlashdutyNotifier(cfg))
-	}
 	if cfg := config.Config.Notify.PagerDuty; cfg != nil && cfg.RoutingKey != "" {
 		notify.Register(notify.NewPagerDutyNotifier(cfg))
 	}

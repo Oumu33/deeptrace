@@ -231,7 +231,6 @@ api_key = "${OPENAI_API_KEY}"
 model = "gpt-4o"
 ```
 
-现在告警触发时，AI 会自动诊断并把报告推送到你的通知渠道。默认 notify 只有 console，通过日志查看生成的告警，后续您可以对接 FlashDuty、PagerDuty 等 On-call 平台。
 
 试试交互模式：
 
@@ -249,7 +248,6 @@ deeptrace 支持多种通知渠道，可以同时开启：
 | --- | --- |
 | **Console** | 终端输出（默认开启，快速验证） |
 | **WebAPI** | 推送到任意 HTTP 端点 |
-| **Flashduty** | 对接 [Flashduty](https://flashcat.cloud/product/flashduty/) On-call 中心 |
 | **PagerDuty** | 对接 [PagerDuty](https://www.pagerduty.com/) On-call 中心 |
 
 ## 为什么说 deeptrace 适合练手 AI 编程
@@ -338,7 +336,6 @@ Level 5  →  接入新的 MCP 数据源，扩展 AI 的诊断视野
 
 例子2：比如你想接入钉钉通知。大概过程是：
 
-> deeptrace 初始对接了四个通知方式，都是结构化的，其中 FlashDuty 和 PagerDuty 都是强大的 On-call 中心，支持告警统一降噪、排班、认领、升级、分析等。钉钉、飞书这类通知媒介其实不够结构化，不适合让 deeptrace 直接发告警给钉钉、飞书。但你为了测试，当然可以在自己的环境里加入这个能力。AI 时代，这简直不要太容易。
 
 - 让 AI 熟悉现在的 notify 模块的逻辑
 - 让 AI 搜索并理解钉钉的机器人通知机制和接口设计

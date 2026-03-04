@@ -1,6 +1,5 @@
 # 设计与实现原则
 
-- deeptrace 配合 Flashduty、PagerDuty 等 On-call 产品使用
 - deeptrace 的实现可以参考 Sensu、Nagios 等同类产品，站在巨人的肩膀上，自然要超越他们
 - deeptrace 的职能不能和 Prometheus + Node-Exporter 重叠
 - deeptrace 应该更加关注异常，而不是关注历史指标趋势
@@ -49,7 +48,6 @@
 
 ## 7. 自身故障可感知：Fail-open 而非 Fail-silent
 
-- 插件 Gather 失败时应产出告警事件，让用户在 FlashDuty 端能感知采集异常
 - Init 阶段的配置错误要清晰报错，说明如何修正
 - panic recovery 后应产出事件，而非仅打日志
 - 监控工具的沉默比被监控系统的故障更危险

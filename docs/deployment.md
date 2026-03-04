@@ -8,11 +8,8 @@
 
 ### 2. 配置
 
-编辑 `conf.d/config.toml`，填入 FlashDuty 的 integration_key：
 
 ```toml
-[flashduty]
-url = "https://api.flashcat.cloud/event/push/alert/standard?integration_key=YOUR_KEY"
 ```
 
 按需启用或调整 `conf.d/p.*` 下的插件配置。
@@ -74,7 +71,6 @@ kill -HUP $(pidof deeptrace)
 docker run -d \
   --name deeptrace \
   -v /path/to/your/conf.d:/app/conf.d \
-  flashcatcloud/deeptrace:latest
 ```
 
 镜像内置了默认 `conf.d`，挂载自定义配置目录即可覆盖。

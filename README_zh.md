@@ -69,8 +69,6 @@ main.main()
 ### 📡 多渠道通知
 
 - 钉钉 — 原生 Markdown 支持
-- 飞书 — 通过 FlashDuty 集成
-- 企业微信 — 通过 FlashDuty 集成
 - PagerDuty — 国际化团队
 - 通用 Webhook — 任意 HTTP 端点
 

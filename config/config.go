@@ -26,13 +26,6 @@ type LogConfig struct {
 	Fields map[string]interface{} `toml:"fields"`
 }
 
-type FlashdutyConfig struct {
-	IntegrationKey string   `toml:"integration_key"`
-	BaseUrl        string   `toml:"base_url"`
-	Timeout        Duration `toml:"timeout"`
-	MaxRetries     int      `toml:"max_retries"`
-}
-
 type PagerDutyConfig struct {
 	RoutingKey  string            `toml:"routing_key"`
 	BaseUrl     string            `toml:"base_url"`
@@ -68,8 +61,7 @@ type ConsoleConfig struct {
 }
 
 type NotifyConfig struct {
-	Console   *ConsoleConfig   `toml:"console"`
-	Flashduty *FlashdutyConfig `toml:"flashduty"`
+	Console  *ConsoleConfig   `toml:"console"`
 	PagerDuty *PagerDutyConfig `toml:"pagerduty"`
 	WebAPI    *WebAPIConfig    `toml:"webapi"`
 	Feishu    *FeishuConfig    `toml:"feishu"`
@@ -318,17 +310,6 @@ func (c *AIConfig) Validate() error {
 }
 
 func (c *NotifyConfig) applyDefaults() {
-	if c.Flashduty != nil {
-		if c.Flashduty.BaseUrl == "" {
-			c.Flashduty.BaseUrl = "https://api.flashcat.cloud/event/push/alert/standard"
-		}
-		if c.Flashduty.Timeout == 0 {
-			c.Flashduty.Timeout = Duration(10 * time.Second)
-		}
-		if c.Flashduty.MaxRetries <= 0 {
-			c.Flashduty.MaxRetries = 1
-		}
-	}
 	if c.PagerDuty != nil {
 		if c.PagerDuty.BaseUrl == "" {
 			c.PagerDuty.BaseUrl = "https://events.pagerduty.com/v2/enqueue"

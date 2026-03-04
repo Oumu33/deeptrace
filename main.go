@@ -252,16 +252,16 @@ func handleMCPTestSubcommand() {
 // --- Usage ---
 
 func printUsage() {
-	fmt.Fprintf(os.Stderr, `catpaw %s - Lightweight monitoring agent with AI-powered diagnostics
+	fmt.Fprintf(os.Stderr, `deeptrace %s - AI-Powered Deep Diagnostic Engine
 
 Usage:
-  catpaw run [flags]                      Start the monitoring agent
-  catpaw chat                             Interactive AI chat for troubleshooting
-  catpaw inspect <plugin> [target]        Run health inspection on a target
-  catpaw diagnose <command>               Manage diagnosis records
-  catpaw selftest [filter] [-q]           Smoke-test all diagnostic tools
-  catpaw mcptest                          Test MCP server connections
-  catpaw help [command]                   Show help for a command
+  deeptrace run [flags]                      Start the monitoring agent
+  deeptrace chat                             Interactive AI chat for troubleshooting
+  deeptrace inspect <plugin> [target]        Run health inspection on a target
+  deeptrace diagnose <command>               Manage diagnosis records
+  deeptrace selftest [filter] [-q]           Smoke-test all diagnostic tools
+  deeptrace mcptest                          Test MCP server connections
+  deeptrace help [command]                   Show help for a command
 
 Global Flags:
   --configs <dir>    Configuration directory (default: conf.d)
@@ -269,14 +269,14 @@ Global Flags:
   --version          Show version
 
 Commands:
-  run         Start the monitoring agent (use 'catpaw help run' for flags)
+  run         Start the monitoring agent (use 'deeptrace help run' for flags)
   chat        Interactive AI chat for troubleshooting
   inspect     Proactive health inspection (AI-powered)
   diagnose    View past diagnosis / inspection records
   selftest    Smoke-test all diagnostic tools on this machine
   mcptest     Test all configured MCP server connections
 
-Run 'catpaw help <command>' for details on a specific command.
+Run 'deeptrace help <command>' for details on a specific command.
 `, config.Version)
 }
 
@@ -301,7 +301,7 @@ func printSubcommandHelp(cmd string) {
 }
 
 func printRunUsage() {
-	fmt.Println(`Usage: catpaw run [flags]
+	fmt.Println(`Usage: deeptrace run [flags]
 
 Start the monitoring agent. Collects metrics, evaluates alerts,
 and optionally triggers AI-powered diagnosis.
@@ -313,13 +313,13 @@ Flags:
 Tip: Enable [notify.console] in config.toml to print events to stdout.
 
 Examples:
-  catpaw run                              Start with default config
-  catpaw run --plugins redis:cpu          Only run redis and cpu plugins
-  catpaw --configs /etc/catpaw/conf.d run Start with custom config dir`)
+  deeptrace run                              Start with default config
+  deeptrace run --plugins redis:cpu          Only run redis and cpu plugins
+  deeptrace --configs /etc/deeptrace/conf.d run Start with custom config dir`)
 }
 
 func printChatUsage() {
-	fmt.Println(`Usage: catpaw chat [-v] [--model <name>]
+	fmt.Println(`Usage: deeptrace chat [-v] [--model <name>]
 
 Start an interactive AI-powered chat session for troubleshooting.
 The AI can use built-in diagnostic tools and execute shell commands
@@ -337,13 +337,13 @@ Interactive commands:
   /model auto         Restore priority-based failover
 
 Examples:
-  catpaw chat                             Start interactive chat
-  catpaw chat -v                          Verbose mode (show tool outputs)
-  catpaw chat --model gpt4o              Pin to specific model`)
+  deeptrace chat                             Start interactive chat
+  deeptrace chat -v                          Verbose mode (show tool outputs)
+  deeptrace chat --model gpt4o              Pin to specific model`)
 }
 
 func printDiagnoseUsage() {
-	fmt.Println(`Usage: catpaw diagnose <command>
+	fmt.Println(`Usage: deeptrace diagnose <command>
 
 View and manage past diagnosis and inspection records.
 
@@ -352,30 +352,30 @@ Commands:
   show <id>     Show full details of a specific record
 
 Examples:
-  catpaw diagnose list
-  catpaw diagnose show alert_redis_10_0_0_1_6379_1709312345678`)
+  deeptrace diagnose list
+  deeptrace diagnose show alert_redis_10_0_0_1_6379_1709312345678`)
 }
 
 func printInspectUsage() {
-	fmt.Println(`Usage: catpaw inspect <plugin> [target]
+	fmt.Println(`Usage: deeptrace inspect <plugin> [target]
 
 Run a proactive AI-powered health inspection against a target.
 For remote plugins (redis, mysql), target is required.
 For local plugins (cpu, mem, disk), target defaults to localhost.
 
 Examples:
-  catpaw inspect redis 10.0.0.1:6379   Inspect a remote Redis instance
-  catpaw inspect cpu                    Inspect local CPU status
-  catpaw inspect mem                    Inspect local memory status
-  catpaw inspect disk                   Inspect local disk status
-  catpaw inspect system                 Full local system inspection
+  deeptrace inspect redis 10.0.0.1:6379   Inspect a remote Redis instance
+  deeptrace inspect cpu                    Inspect local CPU status
+  deeptrace inspect mem                    Inspect local memory status
+  deeptrace inspect disk                   Inspect local disk status
+  deeptrace inspect system                 Full local system inspection
 
-The inspection result is saved as a record. Use 'catpaw diagnose list'
+The inspection result is saved as a record. Use 'deeptrace diagnose list'
 to view past inspections and diagnoses.`)
 }
 
 func printSelftestUsage() {
-	fmt.Println(`Usage: catpaw selftest [filter] [-q]
+	fmt.Println(`Usage: deeptrace selftest [filter] [-q]
 
 Smoke-test all registered diagnostic tools on the current machine.
 Each local tool is executed with safe default parameters. Remote tools
@@ -392,13 +392,13 @@ Exit code:
   1           One or more tests failed
 
 Examples:
-  catpaw selftest                  Test all tools
-  catpaw selftest sysdiag          Test only sysdiag tools
-  catpaw selftest -q               Quiet mode`)
+  deeptrace selftest                  Test all tools
+  deeptrace selftest sysdiag          Test only sysdiag tools
+  deeptrace selftest -q               Quiet mode`)
 }
 
 func printMCPTestUsage() {
-	fmt.Println(`Usage: catpaw mcptest
+	fmt.Println(`Usage: deeptrace mcptest
 
 Test all configured MCP server connections. For each server defined in
 [[ai.mcp.servers]], it will:
@@ -416,6 +416,6 @@ Exit code:
   1           One or more servers failed
 
 Examples:
-  catpaw mcptest                          Test with default config
-  catpaw --configs /etc/catpaw/conf.d mcptest    Use custom config dir`)
+  deeptrace mcptest                          Test with default config
+  deeptrace --configs /etc/deeptrace/conf.d mcptest    Use custom config dir`)
 }

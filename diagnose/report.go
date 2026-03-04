@@ -65,10 +65,10 @@ func formatHeader(record *DiagnoseRecord, language string) string {
 
 func formatFooter(record *DiagnoseRecord, language string) string {
 	if language == "zh" {
-		return fmt.Sprintf("\n---\n查看命令: catpaw diagnose show %s\n完整记录: %s\n",
+		return fmt.Sprintf("\n---\n查看命令: deeptrace diagnose show %s\n完整记录: %s\n",
 			record.ID, record.FilePath())
 	}
-	return fmt.Sprintf("\n---\nView command: catpaw diagnose show %s\nFull record: %s\n",
+	return fmt.Sprintf("\n---\nView command: deeptrace diagnose show %s\nFull record: %s\n",
 		record.ID, record.FilePath())
 }
 

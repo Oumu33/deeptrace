@@ -57,7 +57,7 @@ func TestFormatFooter_ZH(t *testing.T) {
 	if !strings.Contains(f, "完整记录:") {
 		t.Errorf("zh footer should contain Chinese label, got: %s", f)
 	}
-	if !strings.Contains(f, "catpaw diagnose show alert_mem_memory_1234567890_abcd") {
+	if !strings.Contains(f, "deeptrace diagnose show alert_mem_memory_1234567890_abcd") {
 		t.Errorf("zh footer should contain CLI command, got: %s", f)
 	}
 }
@@ -67,7 +67,7 @@ func TestFormatFooter_EN(t *testing.T) {
 	if !strings.Contains(f, "Full record:") {
 		t.Errorf("en footer should contain English label, got: %s", f)
 	}
-	if !strings.Contains(f, "catpaw diagnose show alert_mem_memory_1234567890_abcd") {
+	if !strings.Contains(f, "deeptrace diagnose show alert_mem_memory_1234567890_abcd") {
 		t.Errorf("en footer should contain CLI command, got: %s", f)
 	}
 }
@@ -102,7 +102,7 @@ func TestFormatReport_ShortBody(t *testing.T) {
 	if !strings.Contains(result, "all good") {
 		t.Errorf("short body should not be truncated, got: %s", result)
 	}
-	if !strings.Contains(result, "catpaw diagnose show") {
+	if !strings.Contains(result, "deeptrace diagnose show") {
 		t.Errorf("result should contain CLI command hint")
 	}
 }

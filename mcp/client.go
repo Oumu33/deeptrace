@@ -65,7 +65,7 @@ func (c *Client) Initialize(ctx context.Context) error {
 	params := initializeParams{
 		ProtocolVersion: protocolVersion,
 		Capabilities:    clientCaps{},
-		ClientInfo:      implementationID{Name: "catpaw", Version: "1.0"},
+		ClientInfo:      implementationID{Name: "deeptrace", Version: "1.0"},
 	}
 	var result initializeResult
 	if err := c.call(ctx, "initialize", params, &result); err != nil {

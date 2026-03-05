@@ -6,6 +6,7 @@
 
 [![Go Version](https://img.shields.io/badge/Go-1.21%2B-00ADD8?style=flat&logo=go)](https://go.dev/)
 [![License](https://img.shields.io/badge/License-MIT-green?style=flat)](LICENSE)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen?style=flat)](CONTRIBUTING.md)
 
 ---
 
@@ -231,6 +232,36 @@ handler.go:45 ← 问题代码位置
 | Python | py-spy | `pip install py-spy` |
 | Node.js | llnode/lldb | 安装 llnode |
 | 通用 | gdb | 安装 gdb + 调试符号 |
+
+## 📋 插件列表
+
+| 插件 | 描述 |
+|------|------|
+| `cpu` | CPU 使用率和负载 |
+| `mem` | 内存和 Swap 使用 |
+| `disk` | 磁盘空间和 I/O |
+| `network` | 网络接口和连接 |
+| `redis` | Redis 监控和诊断 |
+| `docker` | Docker 容器状态 |
+| `systemd` | 服务健康检查 |
+| `http` | HTTP 端点探测 |
+| `dns` | DNS 解析检查 |
+| `ping` | ICMP 可达性 |
+| ... | 共 25+ 插件 |
+
+## 🔌 MCP 集成
+
+连接外部数据源：
+
+```toml
+[[ai.mcp.servers]]
+name = "prometheus"
+command = "/usr/local/bin/mcp-prometheus"
+[ai.mcp.servers.env]
+PROMETHEUS_URL = "http://localhost:9090"
+```
+
+AI 可以在诊断过程中查询 Prometheus 获取历史指标数据。
 
 ## 🤝 参与贡献
 

@@ -282,52 +282,57 @@ func (f *FeishuNotifier) buildAIReportElements(desc string) []map[string]interfa
 		})
 	}
 
-	// 诊断摘要（如果有）
-	if sections.Summary != "" {
-		elements = append(elements, map[string]interface{}{"tag": "hr"})
-		elements = append(elements, map[string]interface{}{
-			"tag": "div",
-			"text": map[string]interface{}{
-				"tag":     "lark_md",
-				"content": fmt.Sprintf("**📋 诊断摘要**\n%s", formatMarkdown(sections.Summary)),
-			},
-		})
-	}
+	// 如果成功解析出各分区，结构化展示
+	if sections.Summary != "" || sections.RootCause != "" || sections.Actions != "" {
+		// 诊断摘要
+		if sections.Summary != "" {
+			elements = append(elements, map[string]interface{}{"tag": "hr"})
+			elements = append(elements, map[string]interface{}{
+				"tag": "div",
+				"text": map[string]interface{}{
+					"tag":     "lark_md",
+					"content": "**📋 诊断摘要**",
+				},
+			})
+			elements = append(elements, buildTextElements(formatMarkdown(sections.Summary), 2000)...)
+		}
 
-	// 根因分析（如果有）
-	if sections.RootCause != "" {
-		elements = append(elements, map[string]interface{}{"tag": "hr"})
-		elements = append(elements, map[string]interface{}{
-			"tag": "div",
-			"text": map[string]interface{}{
-				"tag":     "lark_md",
-				"content": fmt.Sprintf("**🔍 根因分析**\n%s", formatMarkdown(sections.RootCause)),
-			},
-		})
-	}
+		// 根因分析
+		if sections.RootCause != "" {
+			elements = append(elements, map[string]interface{}{"tag": "hr"})
+			elements = append(elements, map[string]interface{}{
+				"tag": "div",
+				"text": map[string]interface{}{
+					"tag":     "lark_md",
+					"content": "**🔍 根因分析**",
+				},
+			})
+			elements = append(elements, buildTextElements(formatMarkdown(sections.RootCause), 2000)...)
+		}
 
-	// 建议操作（如果有）
-	if sections.Actions != "" {
+		// 建议操作
+		if sections.Actions != "" {
+			elements = append(elements, map[string]interface{}{"tag": "hr"})
+			elements = append(elements, map[string]interface{}{
+				"tag": "div",
+				"text": map[string]interface{}{
+					"tag":     "lark_md",
+					"content": "**✅ 建议操作**",
+				},
+			})
+			elements = append(elements, buildTextElements(formatMarkdown(sections.Actions), 2000)...)
+		}
+	} else {
+		// 解析失败，直接展示报告内容（分段）
 		elements = append(elements, map[string]interface{}{"tag": "hr"})
 		elements = append(elements, map[string]interface{}{
 			"tag": "div",
 			"text": map[string]interface{}{
 				"tag":     "lark_md",
-				"content": fmt.Sprintf("**✅ 建议操作**\n%s", formatMarkdown(sections.Actions)),
+				"content": "**📝 AI 诊断报告**",
 			},
 		})
-	}
-
-	// 原始报告（折叠展示）
-	if len(desc) > 500 {
-		elements = append(elements, map[string]interface{}{"tag": "hr"})
-		elements = append(elements, map[string]interface{}{
-			"tag": "div",
-			"text": map[string]interface{}{
-				"tag":     "lark_md",
-				"content": fmt.Sprintf("**📝 完整报告**\n%s", formatMarkdown(truncateText(desc, 2000))),
-			},
-		})
+		elements = append(elements, buildTextElements(formatMarkdown(desc), 2000)...)
 	}
 
 	// 查看命令
@@ -339,6 +344,34 @@ func (f *FeishuNotifier) buildAIReportElements(desc string) []map[string]interfa
 				"content": fmt.Sprintf("`%s`", sections.ViewCommand),
 			},
 		})
+	}
+
+	return elements
+}
+
+// buildTextElements 将长文本拆分为多个 div 元素，避免飞书单元素长度限制
+func buildTextElements(text string, maxLen int) []map[string]interface{} {
+	var elements []map[string]interface{}
+
+	for len(text) > 0 {
+		chunk := text
+		if len(chunk) > maxLen {
+			// 在 maxLen 附近找换行符分割
+			chunk = text[:maxLen]
+			if idx := strings.LastIndex(chunk, "\n"); idx > maxLen/2 {
+				chunk = text[:idx+1]
+			}
+		}
+
+		elements = append(elements, map[string]interface{}{
+			"tag": "div",
+			"text": map[string]interface{}{
+				"tag":     "lark_md",
+				"content": chunk,
+			},
+		})
+
+		text = text[len(chunk):]
 	}
 
 	return elements

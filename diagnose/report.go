@@ -7,7 +7,7 @@ import (
 	"unicode/utf8"
 )
 
-const maxDescriptionBytes = 2048
+const maxDescriptionBytes = 6000
 
 // FormatReportDescription builds a concise diagnosis report suitable for
 // notification description fields (max 2048 bytes). It prioritizes:

@@ -226,7 +226,7 @@ func (c *AIConfig) applyDefaults() {
 		c.MaxRounds = 15
 	}
 	if time.Duration(c.RequestTimeout) == 0 {
-		c.RequestTimeout = Duration(60 * time.Second)
+		c.RequestTimeout = Duration(90 * time.Second)
 	}
 	if c.MaxRetries == 0 && c.Enabled {
 		c.MaxRetries = 2

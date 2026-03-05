@@ -66,9 +66,7 @@ func (a *DiagnoseAggregator) Submit(event *types.Event, snapshot CheckSnapshot, 
 	}
 
 	timeout := time.Duration(diagnoseConfig.Timeout)
-	if timeout == 0 {
-		timeout = 60 * time.Second
-	}
+	// timeout == 0 时让 engine.go 根据全局配置计算默认值
 	cooldown := time.Duration(diagnoseConfig.Cooldown)
 	if cooldown == 0 {
 		cooldown = 10 * time.Minute

@@ -38,5 +38,5 @@ params = [
 for_duration = 0
 repeat_interval = "30m"
 repeat_number = 3
-# disabled = false
+disabled = true  # 默认禁用，sysctl 检查仅作为基线记录，不触发告警
 # disable_recovery_notification = false
